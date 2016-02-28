@@ -1,0 +1,70 @@
+<!doctype html>
+<html ng-app="angular-dragula-demo">
+<head>
+	<title>Youtube Playground</title>
+	<link href="css/popup.css" rel="stylesheet" type="text/css">
+</head>
+<body ng-controller="MainCtrl">
+
+
+    <div id="overlay" ng-if="getExtensionState()===null||getExtensionState()==='undefined'">
+        <div>
+            <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
+            <button ng-click="fetchYoutubeChannelId()">Ok, got it.</button>
+        </div>
+    </div>
+
+
+    <div id="overlay" ng-if="getExtensionState()==='fetchingYoutubeChannelId'">
+        <div>
+            <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
+        </div>
+    </div>
+
+
+    <div id="overlay" ng-if="getExtensionState()==='channelIdFound'">
+        <div>
+            <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
+            <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
+        </div>
+    </div>
+
+    
+
+    <button ng-click="restartInitialization()">Restart</button>
+
+
+
+
+
+
+
+
+
+    <!--<select class="collectionsDropdown">
+        <option ng-repeat="item in CollectionsList" ng-bind="item" class="collectionsDropdownItem"></option>
+    </select>-->
+
+
+    <!--<div class='wrapper'>
+        <div class='container' dragula='"first-bag"' dragula-model="SuscribedChannelsList">
+            <div ng-repeat="text in SuscribedChannelsList" ng-bind="text"></div>
+        </div>
+        <div class='container' dragula='"first-bag"' dragula-model="CollectionChannelsList">
+            <div ng-repeat="text in CollectionChannelsList" ng-bind="text"></div>
+        </div>
+    </div>-->
+
+
+
+
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.signalR-2.2.0.js"></script>
+    <script src="js/angular1.4.7.js"></script>
+    <script src="js/angular-dragula.js"></script>
+    <script src="js/popup.js"></script>
+    <script src="js/popup-signalr.js"></script>
+    <script src="js/popup-messenger.js"></script>
+</body>
+</html>
+

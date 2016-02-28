@@ -1,0 +1,29 @@
+{
+	"name": "Youtube Collections Playground",
+	"description": "A chrome extension to test youtube collection database interaction",
+	"version": "2.0",
+	"permissions": [
+		"activeTab",
+		"storage",
+		"tabs",
+		"webNavigation",
+		"http://localhost:5507/*",
+		"http://localhost:3851/*"
+	],
+	"browser_action": {
+		"default_icon": "images/icon.png",
+		"default_popup": "popup.html",
+		"default_title": "Playground"
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://www.youtube.com/*"],
+			"js": ["js/jquery.js","js/contentScript.js"]
+		}
+	],
+	"background": {
+		"scripts": ["js/jquery.js","js/background.js"],
+		"persistent": false
+	},
+	"manifest_version": 2
+}
