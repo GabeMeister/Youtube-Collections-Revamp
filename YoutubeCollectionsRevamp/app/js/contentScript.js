@@ -20,6 +20,11 @@ function getChannelId() {
             chrome.runtime.sendMessage({ message: 'channelIdFound', channelId: channelIdStr });
             return false;
 
+
+            // FOR TEST PURPOSES: dummy account
+            //chrome.runtime.sendMessage({ message: 'channelIdFound', channelId: 'UCbWFwb-TieRunM1l3-v5GuA' });
+            //return false;
+
         }
 
         // TODO: handle channelIdNotFound case

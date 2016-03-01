@@ -30,6 +30,12 @@
     </div>
 
     
+    <div id="overlay" ng-if="getExtensionState()==='fetchingSubscriptions'">
+        <div>
+            <p>{{DisplayMessage}}</p>
+        </div>
+    </div>
+
 
     <button ng-click="restartInitialization()">Restart</button>
 
@@ -57,7 +63,7 @@
 
 
 
-
+    <script src="js/constants.js"></script>
     <script src="js/jquery.js"></script>
     <script src="js/jquery.signalR-2.2.0.js"></script>
     <script src="js/angular1.4.7.js"></script>

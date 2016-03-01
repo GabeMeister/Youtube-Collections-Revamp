@@ -24,7 +24,12 @@ chrome.webNavigation.onCompleted.addListener(function (details) {
     if (details.url === 'https://www.youtube.com/' && localStorage.getItem('ExtensionState') === 'fetchingYoutubeChannelId') {
 
         chrome.tabs.query({ url: 'https://www.youtube.com/*', title: 'YouTube' }, function (tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { message: "getChannelId"});
+            // The user could have had more than one YouTube tab open, so we send this message to all
+            // of them and it'll get to the right one
+            for (i = 0; i < tabs.length; i++) {
+                chrome.tabs.sendMessage(tabs[i].id, { message: "getChannelId" });
+            }
+            
         });
 
     }
