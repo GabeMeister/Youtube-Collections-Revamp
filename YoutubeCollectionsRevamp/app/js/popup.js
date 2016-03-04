@@ -17,7 +17,20 @@ app.factory('youtubeCollectionsFactory', function () {
                 localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
             }
             else {
+
                 collectionsArr.push(collectionObj);
+                collectionsArr.sort(function (a, b) {
+                    if (a.SubscriptionChannelTitle < b.SubscriptionChannelTitle) {
+                        return -1;
+                    }
+                    else if (a.SubscriptionChannelTitle > b.SubscriptionChannelTitle) {
+                        return 1;
+                    }
+                    else {
+                        return 0;
+                    }
+                });
+
                 localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
 
             }
