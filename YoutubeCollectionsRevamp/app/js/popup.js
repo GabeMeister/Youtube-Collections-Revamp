@@ -1,19 +1,61 @@
 var app = angular.module('angular-dragula-demo', [angularDragula(angular)]);
 
+app.factory('youtubeCollectionsFactory', function () {
+    return {
+        initialList: function () {
 
-app.controller('MainCtrl', function ($scope, dragulaService) {
-    $scope.SuscribedChannelsList = [];
+            var collectionsArr = localStorage.getItem('collectionsArr');
+            return JSON.parse(collectionsArr);
+
+        },
+        addToList: function () {
+
+            var collectionsArr = JSON.parse(localStorage.getItem('collectionsArr'));
+
+            if (collectionsArr === null) {
+                collectionsArr = [{ 'title': 'cat', 'data': 1 }];
+                localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
+            }
+            else {
+                var newData = Math.floor(Math.random() * 4000);
+                collectionsArr.push({ 'title': 'New ' + newData, 'data': newData });
+                localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
+
+            }
+            
+            
+            return collectionsArr;
+        },
+        clearList: function () {
+            localStorage.clear();
+            return null;
+        }
+    }
+})
+
+app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsFactory) {
+
+
+    initialize();
+
+    $scope.SuscribedChannelsList = youtubeCollectionsFactory.initialList();
     $scope.CollectionChannelsList = [];
     $scope.CollectionsList = [];
     $scope.YoutubeChannelId = '';
     $scope.DisplayMessage = '';
+
+    $scope.AddToList = function () {
+        $scope.SuscribedChannelsList = youtubeCollectionsFactory.addToList();
+    }
+    
+    
     
     var _hub = null;
     var _hubConnection = null;
 
+    
 
-
-    initialize();
+    
 
 
 
@@ -51,10 +93,9 @@ app.controller('MainCtrl', function ($scope, dragulaService) {
     }
 
     $scope.restartInitialization = function () {
-        localStorage.clear();
+        $scope.SuscribedChannelsList = youtubeCollectionsFactory.clearList();
+        
     }
-
-
 
     
 
@@ -79,39 +120,12 @@ app.controller('MainCtrl', function ($scope, dragulaService) {
 
 
 
-        //var extensionState = localStorage.getItem('ExtensionState');
-        //switch (extensionState) {
-        //    case null:
-        //        // The user is viewing the chrome extension for the first time
 
-        //        break;
-        //    case 'undefined':
-        //        // There was an error before, just re-initialize the extension
-        //        break;
-        //    case 'channelIdFound':
-        //        // We successfully found the user's channel id.
 
-        //        break;
-        //    case 'channelIdNotFound':
-        //        // The user isn't logged in and we weren't able to find their channel id.
 
-        //        break;
-        //    case 'fetchingSubscriptions':
-        //        // In the middle of fetching subscriptions and all videos
 
-        //        break;
-        //    case 'initialized':
-        //        // Regular usage of the extension
-
-        //        break;
-        //    default:
-        //        console.log('Unidentified extension state.');
-        //        break;
-        //}
 
     }
-
-    
 
     function doesLocalStorageItemExist(key) {
         var result = true;
@@ -121,6 +135,9 @@ app.controller('MainCtrl', function ($scope, dragulaService) {
         return result;
     }
 
+    function sillyFunction() {
+        return SillyVariable;
+    }
 
 
     /*********************** SIGNALR ***********************/
@@ -148,10 +165,23 @@ app.controller('MainCtrl', function ($scope, dragulaService) {
 
     }
 
-    function onProgressChanged(msg) {
+    function onProgressChanged(msgObj) {
 
-        $scope.DisplayMessage = msg;
-        $scope.$apply();
+        switch ($scope.getExtensionState()) {
+
+            case 'fetchingSubscriptions':
+                $scope.DisplayMessage = msgObj.Message;
+                $scope.SuscribedChannelsList.push(msgObj.SubscriptionChannelTitle);
+
+                $scope.$apply();
+                break;
+
+            default:
+                console.log("ERROR: Unknown extension state");
+                break;
+
+        }
+        
 
     }
 
