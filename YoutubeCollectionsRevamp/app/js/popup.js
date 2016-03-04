@@ -8,17 +8,16 @@ app.factory('youtubeCollectionsFactory', function () {
             return JSON.parse(collectionsArr);
 
         },
-        addToList: function () {
+        addToCollection: function (collectionObj) {
 
             var collectionsArr = JSON.parse(localStorage.getItem('collectionsArr'));
 
             if (collectionsArr === null) {
-                collectionsArr = [{ 'title': 'cat', 'data': 1 }];
+                collectionsArr = [collectionObj];
                 localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
             }
             else {
-                var newData = Math.floor(Math.random() * 4000);
-                collectionsArr.push({ 'title': 'New ' + newData, 'data': newData });
+                collectionsArr.push(collectionObj);
                 localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
 
             }
@@ -34,7 +33,8 @@ app.factory('youtubeCollectionsFactory', function () {
 })
 
 app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsFactory) {
-
+    var _hub = null;
+    var _hubConnection = null;
 
     initialize();
 
@@ -44,14 +44,10 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
     $scope.YoutubeChannelId = '';
     $scope.DisplayMessage = '';
 
-    $scope.AddToList = function () {
-        $scope.SuscribedChannelsList = youtubeCollectionsFactory.addToList();
-    }
     
     
     
-    var _hub = null;
-    var _hubConnection = null;
+    
 
     
 
@@ -171,7 +167,7 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
 
             case 'fetchingSubscriptions':
                 $scope.DisplayMessage = msgObj.Message;
-                $scope.SuscribedChannelsList.push(msgObj.SubscriptionChannelTitle);
+                $scope.SuscribedChannelsList = youtubeCollectionsFactory.addToCollection(msgObj);
 
                 $scope.$apply();
                 break;

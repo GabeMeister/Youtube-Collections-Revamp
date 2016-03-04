@@ -7,7 +7,7 @@
 <body ng-controller="MainCtrl">
 
 
-    <!--<div id="overlay" ng-if="getExtensionState()===null||getExtensionState()==='undefined'">
+    <div id="overlay" ng-if="getExtensionState()===null||getExtensionState()==='undefined'">
         <div>
             <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
             <button ng-click="fetchYoutubeChannelId()">Ok, got it.</button>
@@ -34,7 +34,7 @@
         <div>
             <p>{{DisplayMessage}}</p>
         </div>
-    </div>-->
+    </div>
 
 
     
@@ -56,10 +56,10 @@
 
     <div class='wrapper'>
         <div class='container' dragula='"first-bag"' dragula-model="SuscribedChannelsList">
-            <div ng-repeat="text in SuscribedChannelsList" ng-bind="text.title"></div>
+            <div ng-repeat="text in SuscribedChannelsList" ng-bind="text.SubscriptionChannelTitle"></div>
         </div>
         <div class='container' dragula='"first-bag"' dragula-model="CollectionChannelsList">
-            <div ng-repeat="text in CollectionChannelsList" ng-bind="text.title"></div>
+            <div ng-repeat="text in CollectionChannelsList" ng-bind="text.SubscriptionChannelTitle"></div>
         </div>
     </div>
     
