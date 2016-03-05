@@ -168,7 +168,8 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
         setTimeout(function () {
             localStorage.setItem('ExtensionState', 'initialized');
             $scope.$apply();
-        }, 1000);
+            window.close();
+        }, 2000);
 
         console.log('Finished inserting subscriptions');
 
