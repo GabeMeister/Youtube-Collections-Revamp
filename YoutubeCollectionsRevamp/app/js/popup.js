@@ -209,10 +209,22 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
     dragulaService.options($scope, 'first-bag', {
         copy: true,
         invalid: function (el, handle) {
-            return $scope.CollectionChannelsList.indexOf(el.innerText) > -1;
+            return doesChannelExist($scope.CollectionChannelsList, el.innerText);
         }
     });
 
+    function doesChannelExist(list, channelName) {
+        var status = false;
+        var i;
+        for (i = 0; i < list.length; i++) {
+            if (list[i].SubscriptionChannelTitle === channelName) {
+                status = true;
+                break;
+            }
+        }
+
+        return status;
+    }
 
 
 
