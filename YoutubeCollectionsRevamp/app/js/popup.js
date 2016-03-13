@@ -1,20 +1,20 @@
-var app = angular.module('angular-dragula-demo', [angularDragula(angular)]);
+var app = angular.module('youtube-collections-revamp', []);
 
 app.factory('youtubeCollectionsFactory', function () {
     return {
         initialList: function () {
 
-            var collectionsArr = localStorage.getItem('collectionsArr');
+            var collectionsArr = localStorage.getItem(COLLECTIONS_LIST);
             return JSON.parse(collectionsArr);
 
         },
         addToCollection: function (collectionObj) {
 
-            var collectionsArr = JSON.parse(localStorage.getItem('collectionsArr'));
+            var collectionsArr = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
 
             if (collectionsArr === null) {
                 collectionsArr = [collectionObj];
-                localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
+                localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionsArr));
             }
             else {
 
@@ -31,7 +31,7 @@ app.factory('youtubeCollectionsFactory', function () {
                     }
                 });
 
-                localStorage.setItem('collectionsArr', JSON.stringify(collectionsArr));
+                localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionsArr));
 
             }
             
@@ -45,80 +45,64 @@ app.factory('youtubeCollectionsFactory', function () {
     }
 })
 
-app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsFactory) {
+app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
     var _hub = null;
     var _hubConnection = null;
 
+    $scope.suscribedChannelsList = [];
+    $scope.collectionChannelsList = [];
+    $scope.collectionsList = [];
+    $scope.youtubeChannelId = '';
+    $scope.displayMessage = '';
+
+
     initialize();
-
-    $scope.SuscribedChannelsList = youtubeCollectionsFactory.initialList();
-    $scope.CollectionChannelsList = [];
-    $scope.CollectionsList = [];
-    $scope.YoutubeChannelId = '';
-    $scope.DisplayMessage = '';
-
-    
-    
-    
-    
-
-    
-
+    initializeScope();
     
 
 
 
     /*********************** SCOPE ***********************/
-    $scope.$watch('$viewContentLoaded', function () {
-        
-    });
-
     $scope.getExtensionState = function () {
-        return localStorage.getItem('ExtensionState');
+
+        return localStorage.getItem(EXTENSION_STATE);
+
     }
 
     $scope.fetchYoutubeChannelId = function () {
+
         // We check for the youtube channel id in the local storage. 
         // If it isn't there, we fetch the youtube channel id from the 
         // user's homepage.
-        localStorage.setItem('ExtensionState', 'fetchingYoutubeChannelId');
-        chrome.runtime.sendMessage({ message: 'fetchYoutubeId' });
+        localStorage.setItem(EXTENSION_STATE, FETCHING_YOUTUBE_CHANNEL_ID);
+        chrome.runtime.sendMessage({ message: FETCH_YOUTUBE_CHANNEL_ID_MSG });
+
     }
 
     $scope.fetchYoutubeSubscriptions = function () {
 
-        localStorage.setItem('ExtensionState', 'fetchingSubscriptions');
+        localStorage.setItem(EXTENSION_STATE, FETCHING_SUBSCRIPTIONS);
         
-        // Insert the youtube id, then in the signalr callback we actually
+        // Kinda subtle, but we insert the youtube id, and THEN in the signalr callback we actually
         // start fetching the subscriptions
-        $scope.DisplayMessage = 'Inserting channel id...';
-        _hub.invoke('InsertYoutubeId', localStorage.getItem('YoutubeChannelId'));
-        
-
-        
-
-
+        $scope.displayMessage = 'Inserting channel id...';
+        _hub.invoke('InsertYoutubeId', localStorage.getItem(YOUTUBE_CHANNEL_ID));
 
     }
 
     $scope.restartInitialization = function () {
-        $scope.SuscribedChannelsList = youtubeCollectionsFactory.clearList();
-        
+
+        $scope.suscribedChannelsList = youtubeCollectionsFactory.clearList();
+
     }
 
     
-
-
-
-
-
-
 
     /*********************** CLASS FUNCTIONS ***********************/
 
     function initialize() {
         
-        _hubConnection = $.hubConnection(constants.hubServerUrl);
+        _hubConnection = $.hubConnection(HUB_SERVER_URL);
         _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
         _hub.on('onChannelIdInserted', onChannelIdInserted);
         _hub.on('onSubscriptionsInserted', onSubscriptionsInserted);
@@ -126,49 +110,45 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
 
         _hubConnection.start();
         
+    }
 
+    function initializeScope() {
 
-
-
-
-
-
+        $scope.suscribedChannelsList = youtubeCollectionsFactory.initialList();
 
     }
 
     function doesLocalStorageItemExist(key) {
+
         var result = true;
         if (localStorage.getItem(key) === null || localStorage.getItem(key) === "undefined") {
             result = false;
         }
         return result;
+
     }
 
-    function sillyFunction() {
-        return SillyVariable;
-    }
 
 
     /*********************** SIGNALR ***********************/
     function onChannelIdInserted() {
 
         // Completed inserting channel id, now fetch all subscriptions
-        $scope.DisplayMessage = 'Fetching channel subscriptions...';
+        $scope.displayMessage = 'Fetching channel subscriptions...';
         $scope.$apply();
-        _hub.invoke('FetchAndInsertChannelSubscriptions', localStorage.getItem('YoutubeChannelId'));
+        _hub.invoke('FetchAndInsertChannelSubscriptions', localStorage.getItem(YOUTUBE_CHANNEL_ID));
 
     }
 
     function onSubscriptionsInserted() {
 
         // Completed inserting subscription id
-        $scope.DisplayMessage = 'Done fetching channel subscriptions!';
+        $scope.displayMessage = 'Done fetching channel subscriptions!';
         $scope.$apply();
 
         setTimeout(function () {
-            localStorage.setItem('ExtensionState', 'initialized');
+            localStorage.setItem(EXTENSION_STATE, INITIALIZED);
             $scope.$apply();
-            window.close();
         }, 2000);
 
         console.log('Finished inserting subscriptions');
@@ -179,9 +159,9 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
 
         switch ($scope.getExtensionState()) {
 
-            case 'fetchingSubscriptions':
-                $scope.DisplayMessage = msgObj.Message;
-                $scope.SuscribedChannelsList = youtubeCollectionsFactory.addToCollection(msgObj);
+            case FETCHING_SUBSCRIPTIONS:
+                $scope.displayMessage = msgObj.Message;
+                $scope.suscribedChannelsList = youtubeCollectionsFactory.addToCollection(msgObj);
 
                 $scope.$apply();
                 break;
@@ -195,6 +175,8 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
 
     }
 
+
+
     /*********************** CHROME EXTENSION ***********************/
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         switch (request.message) {
@@ -206,18 +188,10 @@ app.controller('MainCtrl', function ($scope, dragulaService, youtubeCollectionsF
 
 
 
-    /*********************** DRAGULA ***********************/
-    dragulaService.options($scope, 'first-bag', {
-        copy: true,
-        invalid: function (el, handle) {
-            return doesChannelExist($scope.CollectionChannelsList, el.innerText);
-        }
-    });
-
+    /*********************** Utilities ***********************/
     function doesChannelExist(list, channelName) {
         var status = false;
-        var i;
-        for (i = 0; i < list.length; i++) {
+        for (var i = 0; i < list.length; i++) {
             if (list[i].SubscriptionChannelTitle === channelName) {
                 status = true;
                 break;

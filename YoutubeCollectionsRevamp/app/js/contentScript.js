@@ -3,7 +3,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, response) {
 
     switch (request.message) {
 
-        case 'getChannelId':
+        case GET_CHANNEL_ID_MSG:
             getChannelId();
             break;
 
@@ -17,7 +17,7 @@ function getChannelId() {
 
             var channelIdStr = $(this).attr('href').replace('/channel/', '');
             console.log('Found ' + channelIdStr);
-            chrome.runtime.sendMessage({ message: 'channelIdFound', channelId: channelIdStr });
+            chrome.runtime.sendMessage({ message: NOTIFY_CHANNEL_ID_FOUND_MSG, channelId: channelIdStr });
             return false;
 
 
