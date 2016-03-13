@@ -52,6 +52,7 @@ select {
     padding-bottom: 8px;
     background-color: #ecf0f1;
     margin-right: 5px;
+    color: #942A57;
 }
 
 h1 {
@@ -222,8 +223,7 @@ button:hover {
 }
 
 .collectionsDropdown {
-    color: black;
-    height: 30px;
+    /*color: black;*/
 }
 
 .collectionsDropdownItem {
@@ -258,6 +258,7 @@ button:hover {
 
 option {
     background-color: #ecf0f1;
+    color: #942A57;
 }
 
 #taskbar2 {

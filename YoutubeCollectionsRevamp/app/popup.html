@@ -47,10 +47,10 @@
         
     </div>
     <div class="taskbar" id="taskbar2">
-        <input type="text" value="{{newCollectionName}}" />
-        <button ng-click="createNewCollection()">Add</button>
+        <input type="text" ng-model="newCollectionName" />
+        <button ng-click="insertCollection()">Add</button>
         <select class="collectionsDropdown">
-            <option ng-repeat="item in collectionsList" ng-bind="item" class="collectionsDropdownItem"></option>
+            <option ng-repeat="item in collectionsList" ng-bind="item.title" class="collectionsDropdownItem"></option>
         </select>
     </div>
     <!--END TASK BAR SECTION-->
