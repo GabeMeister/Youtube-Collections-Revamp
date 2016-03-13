@@ -1,29 +1,46 @@
 var app = angular.module('youtube-collections-revamp', []);
 
 app.factory('youtubeCollectionsFactory', function () {
-    return {
-        initialList: function () {
 
-            var collectionsArr = localStorage.getItem(COLLECTIONS_LIST);
-            return JSON.parse(collectionsArr);
+    function convertToLocalStorageCollection(coll) {
+
+        return {
+            id: coll.SubscriptionChannelId,
+            title: coll.SubscriptionChannelTitle
+        };
+
+    }
+
+    return {
+
+        initialChannelList: function () {
+
+            var allChannelsList = localStorage.getItem(ALL_CHANNELS_LIST);
+            return JSON.parse(allChannelsList);
 
         },
-        addToCollection: function (collectionObj) {
 
-            var collectionsArr = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
+        addChannel: function (collectionObj) {
 
-            if (collectionsArr === null) {
-                collectionsArr = [collectionObj];
-                localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionsArr));
+            var allChannelsList = JSON.parse(localStorage.getItem(ALL_CHANNELS_LIST));
+            var newCollection = convertToLocalStorageCollection(collectionObj);
+
+            if (allChannelsList === null) {
+
+                allChannelsList = [newCollection];
+                localStorage.setItem(ALL_CHANNELS_LIST, JSON.stringify(allChannelsList));
+
             }
             else {
 
-                collectionsArr.push(collectionObj);
-                collectionsArr.sort(function (a, b) {
-                    if (a.SubscriptionChannelTitle < b.SubscriptionChannelTitle) {
+                allChannelsList.push(newCollection);
+
+                // Keep channels in alphabetical order
+                allChannelsList.sort(function (a, b) {
+                    if (a.title < b.title) {
                         return -1;
                     }
-                    else if (a.SubscriptionChannelTitle > b.SubscriptionChannelTitle) {
+                    else if (a.title > b.title) {
                         return 1;
                     }
                     else {
@@ -31,19 +48,39 @@ app.factory('youtubeCollectionsFactory', function () {
                     }
                 });
 
-                localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionsArr));
+                localStorage.setItem(ALL_CHANNELS_LIST, JSON.stringify(allChannelsList));
 
             }
             
             
-            return collectionsArr;
+            return allChannelsList;
         },
+
+        addCollection: function(collectionName) {
+
+            var collectionsList = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
+
+            if (collectionsList === null) {
+
+                // Query the database
+
+                
+            }
+            else {
+
+                // Add new collection
+
+            }
+
+        },
+
         clearList: function () {
             localStorage.clear();
             return null;
         }
+
     }
-})
+});
 
 app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
     var _hub = null;
@@ -54,6 +91,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
     $scope.collectionsList = [];
     $scope.youtubeChannelId = '';
     $scope.displayMessage = '';
+    $scope.newCollectionName = '';
 
 
     initialize();
@@ -96,6 +134,15 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     }
 
+    $scope.createNewCollection = function() {
+
+    }
+
+    $scope.addChannelToCollection = function () {
+
+    }
+
+
     
 
     /*********************** CLASS FUNCTIONS ***********************/
@@ -114,7 +161,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     function initializeScope() {
 
-        $scope.suscribedChannelsList = youtubeCollectionsFactory.initialList();
+        $scope.suscribedChannelsList = youtubeCollectionsFactory.initialChannelList();
 
     }
 
@@ -161,7 +208,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
             case FETCHING_SUBSCRIPTIONS:
                 $scope.displayMessage = msgObj.Message;
-                $scope.suscribedChannelsList = youtubeCollectionsFactory.addToCollection(msgObj);
+                $scope.suscribedChannelsList = youtubeCollectionsFactory.addChannel(msgObj);
 
                 $scope.$apply();
                 break;

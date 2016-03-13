@@ -42,11 +42,17 @@
 
 
     <!--TASK BAR SECTION-->
-    <button ng-click="restartInitialization()">Restart</button>
-    
-    <select class="collectionsDropdown">
-        <option ng-repeat="item in collectionsList" ng-bind="item" class="collectionsDropdownItem"></option>
-    </select>
+    <div class="taskbar" id="taskbar1">
+        <button ng-click="restartInitialization()">Restart</button>
+        
+    </div>
+    <div class="taskbar" id="taskbar2">
+        <input type="text" value="{{newCollectionName}}" />
+        <button ng-click="createNewCollection()">Add</button>
+        <select class="collectionsDropdown">
+            <option ng-repeat="item in collectionsList" ng-bind="item" class="collectionsDropdownItem"></option>
+        </select>
+    </div>
     <!--END TASK BAR SECTION-->
 
 
@@ -55,10 +61,10 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.SubscriptionChannelTitle"></div>
+            <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.title"></div>
         </div>
         <div class='container'>
-            <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.SubscriptionChannelTitle"></div>
+            <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.title"></div>
         </div>
     </div>
     <!--END CHANNELS SECTION-->
