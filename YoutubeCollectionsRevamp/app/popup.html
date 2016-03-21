@@ -47,10 +47,14 @@
         
     </div>
     <div class="taskbar" id="taskbar2">
-        <input type="text" ng-model="newCollectionName" />
+        <input type="text" ng-model="newCollectionTitle" />
         <button ng-click="insertCollection()">Add</button>
-        <select class="collectionsDropdown">
-            <option ng-repeat="item in collectionsList" ng-bind="item.title" class="collectionsDropdownItem"></option>
+        <select class="collectionsDropdown"
+                ng-model="collection"
+                ng-options="collection.title for collection in collectionsList"
+                ng-change="setSelectedCollection(collection)"
+                ng-init="collection = getSelectedCollection()">
+            <option value=""></option>
         </select>
     </div>
     <!--END TASK BAR SECTION-->
@@ -61,7 +65,7 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.title"></div>
+            <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel, collection)"></div>
         </div>
         <div class='container'>
             <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.title"></div>
@@ -75,6 +79,9 @@
     <script src="js/jquery.js"></script>
     <script src="js/jquery.signalR-2.2.0.js"></script>
     <script src="js/angular1.4.7.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/youtubeCollectionsFactory.js"></script>
     <script src="js/popup.js"></script>
     <script src="js/popup-signalr.js"></script>
     <script src="js/popup-messenger.js"></script>
