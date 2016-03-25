@@ -31,6 +31,8 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
         // If it isn't there, we fetch the youtube channel id from the 
         // user's homepage.
         localStorage.setItem(EXTENSION_STATE, FETCHING_YOUTUBE_CHANNEL_ID);
+        localStorage.setItem(SELECTED_COLLECTION, JSON.stringify({title: '', collectionItems: []}));
+
         chrome.runtime.sendMessage({ message: FETCH_YOUTUBE_CHANNEL_ID_MSG });
 
     }
@@ -51,7 +53,14 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
         youtubeCollectionsFactory.restartInitialization(_hub);
 
         $scope.suscribedChannelsList = youtubeCollectionsFactory.clearList();
+        $scope.collectionChannelsList = [];
+        
 
+    }
+
+    $scope.restartCollectionItems = function () {
+        youtubeCollectionsFactory.restartCollectionItems(_hub);
+        $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
     }
 
     $scope.insertCollection = function () {
@@ -64,6 +73,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
                 return item1.title === item2.title;
             });
             $scope.newCollectionTitle = '';
+            localStorage.setItem(SELECTED_COLLECTION, JSON.stringify($scope.collection));
 
         }
 
@@ -71,15 +81,26 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     $scope.insertChannelIntoCollection = function (channel, collection) {
 
-        youtubeCollectionsFactory.insertChannelIntoCollection(_hub, channel, collection);
+        if (collection !== null && !doesChannelExist(channel.title, collection.channelItems)) {
+            youtubeCollectionsFactory.insertChannelIntoCollection(_hub, channel, collection);
+            
+            $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
+            $scope.collectionsList = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
+            $scope.collection = findCollection(collection, $scope.collectionsList);
+        }
+        
 
+    }
+
+    $scope.deleteChannelFromCollection = function (channel, collection) {
+        youtubeCollectionsFactory.deleteChannelFromCollection(_hub, channel, collection);
         $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
-
     }
 
     $scope.setSelectedCollection = function (collection) {
         localStorage.setItem(SELECTED_COLLECTION, JSON.stringify(collection));
         $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
+        $scope.collection = findChannel(channel, $scope.collectionChannelsList);
     }
 
     $scope.getSelectedCollection = function () {
@@ -218,6 +239,30 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
         }
 
         return result;
+    }
+
+    function findChannel(channel, channelList) {
+        var foundChannel = null;
+        for (var i = 0; i < channelList.length; i++) {
+            if (channelList[i].title === channel.title) {
+                foundChannel = channelList[i];
+                break;
+            }
+        }
+
+        return foundChannel;
+    }
+
+    function findCollection(collection, collectionList) {
+        var foundCollection = null;
+        for (var i = 0; i < collectionList.length; i++) {
+            if (collectionList[i].title === collection.title) {
+                foundCollection = collectionList[i];
+                break;
+            }
+        }
+
+        return foundCollection;
     }
 
 

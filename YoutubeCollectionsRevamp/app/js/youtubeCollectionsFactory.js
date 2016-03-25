@@ -20,15 +20,32 @@ app.factory('youtubeCollectionsFactory', function () {
 
     function findItem(item, list, func) {
         var result = null;
+
+        if (list !== null) {
+            for (var i = 0; i < list.length; i++) {
+                var funcReturn = func(item, list[i]);
+                if (funcReturn) {
+                    result = list[i];
+                    break;
+                }
+            }
+        }
+        
+
+        return result;
+    }
+
+    function filterCollection(list, channelTitle) {
+        // If the channel's title doesn't match the title passed in, then we
+        // add it into a collection and return it.
+        var filteredCollection = [];
         for (var i = 0; i < list.length; i++) {
-            var funcReturn = func(item, list[i]);
-            if (funcReturn) {
-                result = list[i];
-                break;
+            if (list[i].title !== channelTitle) {
+                filteredCollection.push(list[i]);
             }
         }
 
-        return result;
+        return filteredCollection;
     }
 
     return {
@@ -129,6 +146,7 @@ app.factory('youtubeCollectionsFactory', function () {
             });
 
             collInsertingInto.channelItems.push(channel);
+            localStorage.setItem(SELECTED_COLLECTION, JSON.stringify(collInsertingInto));
 
             localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionList));
 
@@ -138,6 +156,27 @@ app.factory('youtubeCollectionsFactory', function () {
             hub.invoke('InsertCollectionItem', channel.id, collection.title, userYoutubeId);
 
 
+        },
+
+        deleteChannelFromCollection: function(hub, channel, collection) {
+            // Delete channel from local storage
+            var collectionList = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
+            var collDeletingFrom = findItem(collection, collectionList, function(col1, col2) {
+                return col1.title === col2.title;
+            });
+
+            collDeletingFrom.channelItems = filterCollection(collDeletingFrom.channelItems, channel.title);
+
+            localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionList));
+
+            var userYoutubeId = localStorage.getItem(YOUTUBE_CHANNEL_ID);
+
+            // Query database with new channel in collection
+            hub.invoke('DeleteCollectionItem', channel.id, collection.title, userYoutubeId);
+        },
+
+        getSelectedCollection: function(collection) {
+            
         },
 
         getChannelsInSelectedCollection: function() {
@@ -164,11 +203,23 @@ app.factory('youtubeCollectionsFactory', function () {
             return null;
 
         },
-
+        
         restartInitialization: function (hub) {
 
             hub.invoke('RestartInitialization');
 
+        },
+
+        restartCollectionItems: function (hub) {
+            hub.invoke('RestartCollectionItems');
+
+            var collectionsList = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
+
+            for (var i = 0; i < collectionsList.length; i++) {
+                collectionsList[i].channelItems = [];
+            }
+
+            localStorage.setItem(COLLECTIONS_LIST, JSON.stringify(collectionsList));
         }
     }
 });

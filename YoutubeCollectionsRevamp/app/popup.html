@@ -44,7 +44,7 @@
     <!--TASK BAR SECTION-->
     <div class="taskbar" id="taskbar1">
         <button ng-click="restartInitialization()">Restart</button>
-        
+        <button ng-click="restartCollectionItems()">Reset Collections</button>
     </div>
     <div class="taskbar" id="taskbar2">
         <input type="text" ng-model="newCollectionTitle" />
@@ -68,7 +68,7 @@
             <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel, collection)"></div>
         </div>
         <div class='container'>
-            <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.title"></div>
+            <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel, collection)"></div>
         </div>
     </div>
     <!--END CHANNELS SECTION-->
