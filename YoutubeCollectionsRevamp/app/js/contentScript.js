@@ -16,7 +16,7 @@ function getChannelId() {
         if ($(this).text().indexOf('My Channel') > -1) {
 
             var channelIdStr = $(this).attr('href').replace('/channel/', '');
-            console.log('Found ' + channelIdStr);
+            
             chrome.runtime.sendMessage({ message: NOTIFY_CHANNEL_ID_FOUND_MSG, channelId: channelIdStr });
             return false;
 

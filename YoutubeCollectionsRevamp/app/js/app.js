@@ -1,1 +1,1 @@
-﻿var app = angular.module('youtube-collections-revamp', []);
+﻿var app = angular.module('youtube-collections-revamp', ['angularLocalStorage']);

@@ -7,7 +7,7 @@
 <body ng-controller="MainCtrl">
 
     <!--OVERLAY MESSAGES SECTION-->
-    <div id="overlay" ng-if="getExtensionState()===null||getExtensionState()==='undefined'">
+    <div id="overlay" ng-if="extensionState===null||extensionState==='undefined'||extensionState===''">
         <div>
             <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
             <button ng-click="fetchYoutubeChannelId()">Ok, got it.</button>
@@ -15,14 +15,14 @@
     </div>
 
 
-    <div id="overlay" ng-if="getExtensionState()==='FETCHING_YOUTUBE_CHANNEL_ID'">
+    <div id="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
         <div>
             <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
         </div>
     </div>
 
 
-    <div id="overlay" ng-if="getExtensionState()==='CHANNEL_ID_FOUND'">
+    <div id="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
         <div>
             <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
             <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
@@ -30,7 +30,7 @@
     </div>
 
     
-    <div id="overlay" ng-if="getExtensionState()==='FETCHING_SUBSCRIPTIONS'">
+    <div id="overlay" ng-if="extensionState==='FETCHING_SUBSCRIPTIONS'">
         <div>
             <p>{{displayMessage}}</p>
         </div>
@@ -47,13 +47,11 @@
         <button ng-click="restartCollectionItems()">Reset Collections</button>
     </div>
     <div class="taskbar" id="taskbar2">
-        <input type="text" ng-model="newCollectionTitle" />
+        <input type="text" ng-model="newCollectionTitle"/>
         <button ng-click="insertCollection()">Add</button>
         <select class="collectionsDropdown"
-                ng-model="collection"
-                ng-options="collection.title for collection in collectionsList"
-                ng-change="setSelectedCollection(collection)"
-                ng-init="collection = getSelectedCollection()">
+                ng-model="selectedCollection"
+                ng-options="selectedCollection.title for selectedCollection in collectionsList">
             <option value=""></option>
         </select>
     </div>
@@ -65,10 +63,10 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div ng-repeat="channel in suscribedChannelsList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel, collection)"></div>
+            <div ng-repeat="channel in subscriptionList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel)"></div>
         </div>
         <div class='container'>
-            <div ng-repeat="channel in collectionChannelsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel, collection)"></div>
+            <div ng-repeat="channel in collectionItemsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel)"></div>
         </div>
     </div>
     <!--END CHANNELS SECTION-->
@@ -76,12 +74,15 @@
 
 
     <script src="js/constants.js"></script>
+    <script src="js/util.js"></script>
     <script src="js/jquery.js"></script>
     <script src="js/jquery.signalR-2.2.0.js"></script>
     <script src="js/angular1.4.7.js"></script>
 
     <script src="js/app.js"></script>
-    <script src="js/youtubeCollectionsFactory.js"></script>
+    <script src="js/angular-cookies.js"></script>
+    <script src="js/angularLocalStorage.js"></script>
+    <script src="js/youtubeFactory.js"></script>
     <script src="js/popup.js"></script>
     <script src="js/popup-signalr.js"></script>
     <script src="js/popup-messenger.js"></script>

@@ -13,15 +13,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        break;
 
 	    case NOTIFY_CHANNEL_ID_FOUND_MSG:
-	        localStorage.setItem(YOUTUBE_CHANNEL_ID, request.channelId);
-	        localStorage.setItem(EXTENSION_STATE, CHANNEL_ID_FOUND);
+	        localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
+	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
 	        break;
 
 	}
 });
 
 chrome.webNavigation.onCompleted.addListener(function (details) {
-    if (details.url === 'https://www.youtube.com/' && localStorage.getItem(EXTENSION_STATE) === FETCHING_YOUTUBE_CHANNEL_ID) {
+    if (details.url === 'https://www.youtube.com/' && util.IsSame(localStorage.getItem(EXTENSION_STATE), FETCHING_YOUTUBE_CHANNEL_ID)) {
 
         chrome.tabs.query({ url: 'https://www.youtube.com/*', title: 'YouTube' }, function (tabs) {
             // The user could have had more than one YouTube tab open, so we send this message to all
@@ -47,16 +47,3 @@ function fetchYoutubeId()
 
     chrome.tabs.create({ url: 'https://www.youtube.com/' });
 }
-
-function makeAjaxRequest() {
-	//$.ajax({
-	//	url: ytCollectionsUrl + 'api/products/all',
-	//	success: function(response) {
-	//		chrome.runtime.sendMessage({message: 'receivedJSON', jsonResponse: response});
-	//	},
-	//	error: function(response) {
-	//		chrome.runtime.sendMessage({message: 'receivedJSON', jsonResponse: response});
-	//	}
-	//});
-}
-

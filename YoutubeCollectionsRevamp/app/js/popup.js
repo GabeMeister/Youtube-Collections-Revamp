@@ -1,119 +1,102 @@
 
-app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
+app.controller('MainCtrl', function ($scope, storage) {
     var _hub = null;
     var _hubConnection = null;
 
-    $scope.suscribedChannelsList = [];
-    $scope.collectionChannelsList = [];
-    $scope.collectionsList = [];
-    $scope.youtubeChannelId = '';
-    $scope.displayMessage = '';
-    $scope.newCollectionTitle = '';
-    $scope.collection = null;
 
 
-    initialize();
+    initializeHub();
     initializeScope();
     
 
 
 
     /*********************** SCOPE ***********************/
-    $scope.getExtensionState = function () {
+    $scope.$watch('selectedCollection', function () {
+        // Change collection items to the new currently selected collection
+        $scope.collectionItemsList = getCollectionItems();
+    });
 
-        return localStorage.getItem(EXTENSION_STATE);
-
-    }
+    $scope.$watch('selectedCollection.channelItems', function() {
+        // Change collection items to the new currently selected collection
+        $scope.collectionItemsList = getCollectionItems();
+    });
 
     $scope.fetchYoutubeChannelId = function () {
 
         // We check for the youtube channel id in the local storage. 
         // If it isn't there, we fetch the youtube channel id from the 
         // user's homepage.
-        localStorage.setItem(EXTENSION_STATE, FETCHING_YOUTUBE_CHANNEL_ID);
-        localStorage.setItem(SELECTED_COLLECTION, JSON.stringify({title: '', collectionItems: []}));
+        $scope.extensionState = FETCHING_YOUTUBE_CHANNEL_ID;
 
         chrome.runtime.sendMessage({ message: FETCH_YOUTUBE_CHANNEL_ID_MSG });
 
     }
 
     $scope.fetchYoutubeSubscriptions = function () {
-
-        localStorage.setItem(EXTENSION_STATE, FETCHING_SUBSCRIPTIONS);
+        
+        $scope.extensionState = FETCHING_SUBSCRIPTIONS;
         
         // Kinda subtle, but we insert the youtube id, and THEN in the signalr callback we actually
         // start fetching the subscriptions
         $scope.displayMessage = 'Inserting channel id...';
-        _hub.invoke('InsertYoutubeId', localStorage.getItem(YOUTUBE_CHANNEL_ID));
+        _hub.invoke('InsertYoutubeId', $scope.userYoutubeId);
 
     }
 
     $scope.restartInitialization = function () {
-
-        youtubeCollectionsFactory.restartInitialization(_hub);
-
-        $scope.suscribedChannelsList = youtubeCollectionsFactory.clearList();
-        $scope.collectionChannelsList = [];
-        
-
+        _hub.invoke('RestartInitialization');
+        clearScope();
     }
 
     $scope.restartCollectionItems = function () {
-        youtubeCollectionsFactory.restartCollectionItems(_hub);
-        $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
+        _hub.invoke('RestartCollectionItems');
+
+        for (var i = 0; i < $scope.collectionsList.length; i++) {
+            $scope.collectionsList[i].channelItems = [];
+        }
     }
 
     $scope.insertCollection = function () {
 
-        // Check that there's actually text in the input
-        if ($scope.newCollectionTitle != "" && !doesChannelExist($scope.newCollectionTitle, $scope.collectionsList)) {
+        // Check that there's actually text in the input and the collection name
+        // doesn't already exist
+        if ($scope.newCollectionTitle !== "" && !util.doesChannelExist($scope.newCollectionTitle, $scope.collectionsList)) {
+            var newCollItem = createLocalStorageCollection($scope.newCollectionTitle);
 
-            $scope.collectionsList = youtubeCollectionsFactory.insertCollection(_hub, $scope.newCollectionTitle);
-            $scope.collection = findItem({title: $scope.newCollectionTitle}, $scope.collectionsList, function (item1, item2) {
-                return item1.title === item2.title;
-            });
+            // Add new collection to existing collections list
+            $scope.collectionsList.push(newCollItem);
+            sortCollectionsList();
+
+            // Query the database
+            _hub.invoke('InsertCollection', newCollItem.title, $scope.userYoutubeId);
+
+            // Set new collection as selected
+            $scope.selectedCollection = util.findCollectionByName($scope.newCollectionTitle, $scope.collectionsList);
+
+            // Remove text because collection was inserted
             $scope.newCollectionTitle = '';
-            localStorage.setItem(SELECTED_COLLECTION, JSON.stringify($scope.collection));
 
         }
 
     }
 
-    $scope.insertChannelIntoCollection = function (channel, collection) {
+    $scope.insertChannelIntoCollection = function (channel) {
 
-        if (collection !== null && !doesChannelExist(channel.title, collection.channelItems)) {
-            youtubeCollectionsFactory.insertChannelIntoCollection(_hub, channel, collection);
-            
-            $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
-            $scope.collectionsList = JSON.parse(localStorage.getItem(COLLECTIONS_LIST));
-            $scope.collection = findCollection(collection, $scope.collectionsList);
-        }
-        
-
-    }
-
-    $scope.deleteChannelFromCollection = function (channel, collection) {
-        youtubeCollectionsFactory.deleteChannelFromCollection(_hub, channel, collection);
-        $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
-    }
-
-    $scope.setSelectedCollection = function (collection) {
-        localStorage.setItem(SELECTED_COLLECTION, JSON.stringify(collection));
-        $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
-        $scope.collection = findChannel(channel, $scope.collectionChannelsList);
-    }
-
-    $scope.getSelectedCollection = function () {
-        var result = null;
-        var storedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
-
-        if (storedCollection !== null) {
-            var result = findItem(storedCollection, $scope.collectionsList, function(coll1, coll2) {
-                return coll1.title === coll2.title;
-            });
+        // If no collection is selected or there are no collections then we don't
+        // do anything
+        if ($scope.selectedCollection !== null && !util.doesChannelExist(channel.title, $scope.selectedCollection.channelItems)) {
+            $scope.selectedCollection.channelItems.push(channel);
+            // Query database with new channel in collection
+            _hub.invoke('InsertCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
         }
         
-        return result;
+    }
+
+    $scope.deleteChannelFromCollection = function (channel) {
+        $scope.selectedCollection.channelItems = util.filterCollection(channel.title, $scope.selectedCollection.channelItems);
+        // Query database with new channel in collection
+        _hub.invoke('DeleteCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
     }
 
 
@@ -121,7 +104,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     /*********************** CLASS FUNCTIONS ***********************/
 
-    function initialize() {
+    function initializeHub() {
         
         _hubConnection = $.hubConnection(HUB_SERVER_URL);
         _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
@@ -134,21 +117,34 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
     }
 
     function initializeScope() {
+        storage.bind($scope, 'subscriptionList', { defaultValue: [], storeName: SUBSCRIPTIONS_LIST });
+        storage.bind($scope, 'collectionsList', { defaultValue: [], storeName: COLLECTIONS_LIST });
+        storage.bind($scope, 'selectedCollection', { defaultValue: null, storeName: SELECTED_COLLECTION });
+        storage.bind($scope, 'newCollectionTitle', { defaultValue: '', storeName: NEW_COLLECTION_TITLE });
+        storage.bind($scope, 'displayMessage', { defaultValue: '', storeName: DISPLAY_MESSAGE });
+        storage.bind($scope, 'userYoutubeId', { defaultValue: '', storeName: USER_YOUTUBE_ID });
+        storage.bind($scope, 'extensionState', { defaultValue: '', storeName: EXTENSION_STATE });
+        
+        // The selected collection needs to be an exact reference to an item in the collections list
+        // If you store an item to local storage and then retrieve it from local storage, it's a different
+        // reference
+        $scope.selectedCollection = util.findCollection($scope.selectedCollection, $scope.collectionsList);
 
-        $scope.suscribedChannelsList = youtubeCollectionsFactory.initialChannelList();
-        $scope.collectionsList = youtubeCollectionsFactory.initialCollectionsList();
-        $scope.collectionChannelsList = youtubeCollectionsFactory.getChannelsInSelectedCollection();
-
+        // We don't actually store the collection items in local storage, they are
+        // already stored via the selected collection channel items
+        $scope.collectionItemsList = [];
     }
 
-    function doesLocalStorageItemExist(key) {
-
-        var result = true;
-        if (localStorage.getItem(key) === null || localStorage.getItem(key) === "undefined") {
-            result = false;
-        }
-        return result;
-
+    function clearScope() {
+        // This is for when we are doing a full restart
+        $scope.subscriptionList = [];
+        $scope.collectionsList = [];
+        $scope.selectedCollection = null;
+        $scope.newCollectionTitle = '';
+        $scope.displayMessage = '';
+        $scope.userYoutubeId = '';
+        $scope.extensionState = '';
+        $scope.collectionItemsList = [];
     }
 
 
@@ -159,7 +155,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
         // Completed inserting channel id, now fetch all subscriptions
         $scope.displayMessage = 'Fetching channel subscriptions...';
         $scope.$apply();
-        _hub.invoke('FetchAndInsertChannelSubscriptions', localStorage.getItem(YOUTUBE_CHANNEL_ID));
+        _hub.invoke('FetchAndInsertChannelSubscriptions', $scope.userYoutubeId);
 
     }
 
@@ -170,7 +166,7 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
         $scope.$apply();
 
         setTimeout(function () {
-            localStorage.setItem(EXTENSION_STATE, INITIALIZED);
+            $scope.extensionState = INITIALIZED;
             $scope.$apply();
         }, 2000);
         
@@ -178,12 +174,11 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     function onProgressChanged(msgObj) {
 
-        switch ($scope.getExtensionState()) {
+        switch ($scope.extensionState) {
 
             case FETCHING_SUBSCRIPTIONS:
                 $scope.displayMessage = msgObj.Message;
-                $scope.suscribedChannelsList = youtubeCollectionsFactory.insertChannel(msgObj);
-
+                addSubscription(msgObj);
                 $scope.$apply();
                 break;
 
@@ -196,10 +191,63 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
     }
 
-    function onCollectionInserted(collectionObj) {
+    function convertToLocalStorageChannel(channel) {
 
-        youtubeCollectionsFactory.onCollectionInserted(collectionObj);
+        return {
+            id: channel.SubscriptionYoutubeChannelId,
+            title: channel.SubscriptionChannelTitle
+        };
 
+    }
+
+    function createLocalStorageCollection(collName) {
+
+        return {
+            title: collName,
+            channelItems: []
+        };
+
+    }
+
+    function addSubscription(subscriptionObj) {
+        $scope.subscriptionList.push(convertToLocalStorageChannel(subscriptionObj));
+        sortSubscriptionsList();
+    }
+
+    function sortSubscriptionsList() {
+        $scope.subscriptionList.sort(function (a, b) {
+            if (a.title < b.title) {
+                return -1;
+            }
+            else if (a.title > b.title) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+    }
+
+    function sortCollectionsList() {
+        $scope.collectionsList.sort(function (a, b) {
+            if (a.title < b.title) {
+                return -1;
+            }
+            else if (a.title > b.title) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+    }
+
+    function getCollectionItems() {
+        var result = null;
+        if ($scope.selectedCollection !== null) {
+            result = $scope.selectedCollection.channelItems;
+        }
+        return result;
     }
 
 
@@ -211,60 +259,6 @@ app.controller('MainCtrl', function ($scope, youtubeCollectionsFactory) {
 
         }
     });
-
-
-
-    /*********************** Utilities ***********************/
-    function doesChannelExist(channelTitle, list) {
-
-        var status = false;
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].title === channelTitle) {
-                status = true;
-                break;
-            }
-        }
-
-        return status;
-    }
-
-    function findItem(item, list, func) {
-        var result = null;
-        for (var i = 0; i < list.length; i++) {
-            var funcReturn = func(item, list[i]);
-            if (funcReturn) {
-                result = list[i];
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    function findChannel(channel, channelList) {
-        var foundChannel = null;
-        for (var i = 0; i < channelList.length; i++) {
-            if (channelList[i].title === channel.title) {
-                foundChannel = channelList[i];
-                break;
-            }
-        }
-
-        return foundChannel;
-    }
-
-    function findCollection(collection, collectionList) {
-        var foundCollection = null;
-        for (var i = 0; i < collectionList.length; i++) {
-            if (collectionList[i].title === collection.title) {
-                foundCollection = collectionList[i];
-                break;
-            }
-        }
-
-        return foundCollection;
-    }
-
 
 
 });
