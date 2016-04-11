@@ -20,6 +20,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
 	        break;
 
+	    case RECORD_WATCHED_VIDEO:
+	        recordWatchedVideo(sender.tab.id);
+	        break;
+
 	}
 });
 
@@ -50,6 +54,25 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
+function recordWatchedVideo(id) {
+    chrome.tabs.get(id, function (tab) {
+        if (_hub === null) {
+            initializeHub();
+        }
+
+        var youtubeTabUrl = tab.url.replace('https://www.youtube.com/watch?', '');
+        var params = $.getQueryParameters(youtubeTabUrl);
+        var videoId = params["v"];
+        var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+        var dateViewed = formatDateTime(new Date());
+
+        setTimeout(function () {
+            _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+        }, 1000);
+    });
+
+}
+
 function markVideoAsWatched(info, tab) {
     var url = info.linkUrl;
     
@@ -71,6 +94,9 @@ function markVideoAsWatched(info, tab) {
 
 
         // Remove video in view
+        // Because the user right clicked in the active window to mark the video
+        // as watched, we can rely on the fact that the window is active and the 
+        // url has youtube in it
 		chrome.tabs.query({ active: true, url: 'https://www.youtube.com/*' }, function (tabs) {
 		    
 		    chrome.tabs.sendMessage(tabs[0].id, { 'message': REMOVE_VIDEO, 'videoId': videoId });

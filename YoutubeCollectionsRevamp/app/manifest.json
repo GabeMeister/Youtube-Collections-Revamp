@@ -23,7 +23,7 @@
 		}
 	],
     "background": {
-        "scripts": [ "js/constants.js", "js/util.js", "js/jquery.js", "js/jquery.signalR-2.2.0.js", "js/background.js" ],
+        "scripts": [ "js/constants.js", "js/util.js", "js/jquery.js", "js/jQueryParameters.js", "js/jquery.signalR-2.2.0.js", "js/background.js" ],
         "persistent": false
     },
     "icons": {
