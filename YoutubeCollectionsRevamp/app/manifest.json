@@ -6,7 +6,8 @@
 		"activeTab",
 		"storage",
 		"tabs",
-		"webNavigation",
+        "webNavigation",
+        "contextMenus",
 		"http://localhost:5507/*",
 		"http://localhost:3851/*"
 	],
@@ -21,9 +22,12 @@
 			"js": ["js/constants.js", "js/jquery.js","js/contentScript.js"]
 		}
 	],
-	"background": {
-		"scripts": ["js/constants.js", "js/util.js", "js/jquery.js","js/background.js"],
-		"persistent": false
+    "background": {
+        "scripts": [ "js/constants.js", "js/util.js", "js/jquery.js", "js/jquery.signalR-2.2.0.js", "js/background.js" ],
+        "persistent": false
+    },
+    "icons": {
+		"16": "images/icon.png"
 	},
 	"manifest_version": 2
 }
