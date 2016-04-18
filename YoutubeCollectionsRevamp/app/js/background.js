@@ -6,6 +6,8 @@ var ytCollectionsUrl = 'http://localhost:5507/';
 var _hub = null;
 var _hubConnection = null;
 
+initializeHub();
+
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
@@ -22,6 +24,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 	    case RECORD_WATCHED_VIDEO:
 	        recordWatchedVideo(sender.tab.id);
+	        break;
+
+	    case CHANGE_RELATED_VIDEOS:
+	        // We immediately set the currently being watched video id
+	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
+	        changeRelatedVideos(request.videoIds);
 	        break;
 
 	}
@@ -128,6 +136,7 @@ function initializeHub() {
 
     _hubConnection = $.hubConnection(HUB_SERVER_URL);
     _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
+    _hub.on('onRelatedVideosChange', onRelatedVideosChange);
 
     _hubConnection.start();
 
@@ -156,3 +165,26 @@ function formatDateTime(date) {
     // We want YYYY-MM-DD hh:mm:ss format
     return strDate + ' ' + strTime;
 }
+
+function changeRelatedVideos(relatedVideoIds) {
+    var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+    _hub.invoke('GetUnwatchedVideos', userYoutubeId, relatedVideoIds);
+}
+
+
+/************************* Signalr Response Functions *************************/
+function onRelatedVideosChange(msgObj) {
+    var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
+    var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
+    chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
+    });
+
+}
+
+
+
+
+
+
+

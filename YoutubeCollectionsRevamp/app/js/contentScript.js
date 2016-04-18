@@ -16,6 +16,10 @@
                 removeVideo(request.videoId);
                 break;
 
+            case UPDATE_RELATED_VIDEOS:
+                updateRelatedVideos(request.unseenVideoIds);
+                break;
+
         }
 
     });
@@ -42,6 +46,20 @@
 
     }
 
+    function fetchChannelId() {
+        var channelIdStr = null;
+        $('.guide-item.yt-uix-sessionlink.yt-valign.spf-link').each(function (index) {
+            if ($(this).text().indexOf('My Channel') > -1) {
+                channelIdStr = $(this).attr('href').replace('/channel/', '');
+                return false;
+            }
+
+            // TODO: handle channelIdNotFound case
+        });
+
+        return channelIdStr;
+    }
+
     function removeVideo(videoId) {
 
         var relatedVidToRemove = null;
@@ -59,20 +77,32 @@
 
     }
 
-
-
     
     _video.addEventListener('ended', function (e) {
         // When a video ends we add it to the user's watched video list
         chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO });
-
     });
 
     _video.addEventListener('progress', function (e) {
         // When a video starts we remove related videos that the user has already seen
+        // We use the progress event because the start event doesn't always get fired
+        var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
+        var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
 
+        if (lastPlayedVideoUrl !== undefined && util.quotify(currVideoUrl) !== lastPlayedVideoUrl)
+        {
+            // This is a new video, we need to change the related videos
+            // First record video url to local storage
+            localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
+
+            // Now change related videos
+            RemoveWatchedRelatedVideos();
+
+        }
+        
 
     });
+
 
     
 
@@ -86,6 +116,28 @@
 
 
     /************************* DOM Interactions *************************/
+    function RemoveWatchedRelatedVideos() {
+        var relatedVideoIds = GetRelatedVideoIds();
+        var currentVideoIdBeingWatched = util.unquotify(localStorage.getItem(LAST_PLAYED_VIDEO_URL));
+
+        chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoIdBeingWatched });
+    }
+
+    function GetRelatedVideoIds() {
+        var relatedVideoIds = [];
+        var relatedVids = $('.related-list-item');
+
+        for (var i = 0; i < relatedVids.length; i++) {
+            var relatedVideoItemUrl = relatedVids.eq(i).find('a').attr('href').replace('/watch?', '');
+            var params = $.getQueryParameters(relatedVideoItemUrl);
+            var videoId = params["v"];
+
+            relatedVideoIds.push(videoId);
+        }
+
+        return relatedVideoIds;
+    }
+
     function WaitUntilPageLoaded(sortType) {
         var found = false;
         while (!found) {
@@ -392,5 +444,25 @@
         return videoHTML;
     }
 
+    /************************* Signalr Response Functions *************************/
+    function updateRelatedVideos(unseenVideos) {
+        var relatedVideos = $(".related-list-item");
+
+        for (var i = 0; i < relatedVideos.length; i++) {
+            var relatedVideo = relatedVideos.eq(i);
+            var relatedVideoItemUrl = relatedVideo.find('a').attr('href').replace('/watch?', '');
+            var params = $.getQueryParameters(relatedVideoItemUrl);
+            var videoId = params["v"];
+
+            // If the video id isn't found in the unseen videos list, then
+            // we should remove it because the user has seen it
+            if (unseenVideos.indexOf(videoId) === -1) {
+                relatedVideo.remove();
+            }
+
+        }
+
+    }
+    
 });
 
