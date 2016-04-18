@@ -124,6 +124,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         storage.bind($scope, 'displayMessage', { defaultValue: '', storeName: DISPLAY_MESSAGE });
         storage.bind($scope, 'userYoutubeId', { defaultValue: '', storeName: USER_YOUTUBE_ID });
         storage.bind($scope, 'extensionState', { defaultValue: '', storeName: EXTENSION_STATE });
+        storage.bind($scope, 'areCollectionsOn', { defaultValue: false, storeName: ARE_COLLECTIONS_ON });
         
         // The selected collection needs to be an exact reference to an item in the collections list
         // If you store an item to local storage and then retrieve it from local storage, it's a different
@@ -133,6 +134,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         // We don't actually store the collection items in local storage, they are
         // already stored via the selected collection channel items
         $scope.collectionItemsList = [];
+
     }
 
     function clearScope() {

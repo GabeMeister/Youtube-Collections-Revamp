@@ -43,11 +43,13 @@
 
     <!--TASK BAR SECTION-->
     <div class="taskbar" id="taskbar1">
-        <button ng-click="restartInitialization()">Restart</button>
-        <button ng-click="restartCollectionItems()">Reset Collections</button>
+        <!--<button ng-click="restartInitialization()">Restart</button>
+        <button ng-click="restartCollectionItems()">Reset Collections</button>-->
+        <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn" /><span class="onOffLabel">Turn Youtube Collections On</span></label>
+        
     </div>
     <div class="taskbar" id="taskbar2">
-        <input type="text" ng-model="newCollectionTitle"/>
+        <input class="newCollectionInput"type="text" ng-model="newCollectionTitle"/>
         <button ng-click="insertCollection()">Add</button>
         <select class="collectionsDropdown"
                 ng-model="selectedCollection"

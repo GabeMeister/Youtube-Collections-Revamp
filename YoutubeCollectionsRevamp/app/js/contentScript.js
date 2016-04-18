@@ -121,6 +121,11 @@
         var currentVideoIdBeingWatched = util.unquotify(localStorage.getItem(LAST_PLAYED_VIDEO_URL));
 
         chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoIdBeingWatched });
+
+        var relatedVids = $('.related-list-item');
+        for (var i = 0; i < relatedVids.length; i++) {
+            relatedVids.eq(i).css('visibility', 'hidden');
+        }
     }
 
     function GetRelatedVideoIds() {
@@ -458,6 +463,10 @@
             // we should remove it because the user has seen it
             if (unseenVideos.indexOf(videoId) === -1) {
                 relatedVideo.remove();
+            }
+            else {
+                // We set the visibility property to hidden, we will restore that now
+                relatedVideo.css('visibility', 'visible');
             }
 
         }
