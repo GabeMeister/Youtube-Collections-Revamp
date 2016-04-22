@@ -471,6 +471,20 @@
 
         }
 
+        // If the auto play video isn't present, then we have to add in a related video from
+        // the other regular related videos
+        var autoPlayBarVideoList = $('.autoplay-bar').first().find('.watch-sidebar-body').first().find('.video-list').first();
+        var autoPlayVideo = autoPlayBarVideoList.find('a').first();
+        
+        if (autoPlayVideo.length === 0) {
+            // The up next video got removed, we have to move a video up
+            var watchRelated = $('#watch-related').first();
+            var firstRelatedVideo = watchRelated.find('.related-list-item').first();
+
+            autoPlayBarVideoList.append(firstRelatedVideo);
+
+        }
+
     }
     
 });
