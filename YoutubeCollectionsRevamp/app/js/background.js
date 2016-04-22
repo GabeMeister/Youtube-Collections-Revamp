@@ -168,17 +168,42 @@ function formatDateTime(date) {
 
 function changeRelatedVideos(relatedVideoIds) {
     var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
-    _hub.invoke('GetUnwatchedVideos', userYoutubeId, relatedVideoIds);
+    var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
+    
+
+    if (areCollectionsOn) {
+        var selectedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
+        _hub.invoke('GetVideosForCollection', userYoutubeId, selectedCollection.title);
+    }
+    else {
+        _hub.invoke('GetUnwatchedVideos', userYoutubeId, relatedVideoIds);
+    }
+    
 }
 
 
 /************************* Signalr Response Functions *************************/
 function onRelatedVideosChange(msgObj) {
-    var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
-    var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
-    chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
-    });
+    var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
+
+    if (areCollectionsOn) {
+        // We change the related videos to the collection videos
+        var collectionVideos = msgObj.CollectionVideos;
+        var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
+        chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS, videoData: collectionVideos});
+        });
+    }
+    else {
+        // This is just filtering out related videos that the user has already seen
+        var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
+        var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
+        chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
+        });
+    }
+
+    
 
 }
 

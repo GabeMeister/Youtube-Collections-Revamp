@@ -20,6 +20,10 @@
                 updateRelatedVideos(request.unseenVideoIds);
                 break;
 
+            case UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS:
+                updateRelatedVideosWithCollectionVideos(request.videoData);
+                break;
+
         }
 
     });
@@ -484,6 +488,11 @@
             autoPlayBarVideoList.append(firstRelatedVideo);
 
         }
+
+    }
+
+    function updateRelatedVideosWithCollectionVideos(videoData) {
+        // TODO
 
     }
     
