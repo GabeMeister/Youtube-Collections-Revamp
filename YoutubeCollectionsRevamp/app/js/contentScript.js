@@ -1,5 +1,8 @@
 ﻿$(document).ready(function () {
-    var _video;
+    var _video = null;
+    var _relatedVideosList;
+    var _autoPlayVideo;
+
 
 
     initialize();
@@ -22,6 +25,10 @@
 
             case UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS:
                 updateRelatedVideosWithCollectionVideos(request.videoData);
+                break;
+
+            case FOUND_CURRENT_YOUTUBE_URL:
+                setVideoEventsIfOnVideo(request.url);
                 break;
 
         }
@@ -82,30 +89,7 @@
     }
 
     
-    _video.addEventListener('ended', function (e) {
-        // When a video ends we add it to the user's watched video list
-        chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO });
-    });
-
-    _video.addEventListener('progress', function (e) {
-        // When a video starts we remove related videos that the user has already seen
-        // We use the progress event because the start event doesn't always get fired
-        var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
-        var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
-
-        if (lastPlayedVideoUrl !== undefined && util.quotify(currVideoUrl) !== lastPlayedVideoUrl)
-        {
-            // This is a new video, we need to change the related videos
-            // First record video url to local storage
-            localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
-
-            // Now change related videos
-            RemoveWatchedRelatedVideos();
-
-        }
-        
-
-    });
+    
 
 
     
@@ -115,7 +99,14 @@
 
 
     function initialize() {
-        _video = $('video').get(0);
+        _relatedVideosList = [];
+        _autoPlayVideo = null;
+        waitUntilUserBrowsesToVideo();
+
+        //_video = $('video').get(0);
+        //if (_video === undefined) {
+        //    waitUntilUserBrowsesToVideo();
+        //}
     }
 
 
@@ -126,10 +117,24 @@
 
         chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoIdBeingWatched });
 
-        var relatedVids = $('.related-list-item');
-        for (var i = 0; i < relatedVids.length; i++) {
-            relatedVids.eq(i).css('visibility', 'hidden');
+        //var autoPlayVideo = getAutoplayVideo();
+        //var relatedVideoItemUrl = autoPlayVideo.find('a').attr('href').replace('/watch?', '');
+        //var params = $.getQueryParameters(relatedVideoItemUrl);
+        //_autoPlayVideoId = params["v"];
+
+        var relatedVidsList = getAllRelatedVideos();
+        // To "track" the original related videos, we keep track of them in this list
+        _relatedVideosList = [];
+        for (var i = 0; i < relatedVidsList.length; i++) {
+            _relatedVideosList.push(relatedVidsList.eq(i));
+            relatedVidsList.eq(i).remove();
         }
+    }
+
+    function waitUntilUserBrowsesToVideo() {
+        setTimeout(function () {
+            chrome.runtime.sendMessage({ message: GET_CURRENT_YOUTUBE_URL });
+        }, 4000);
     }
 
     function GetRelatedVideoIds() {
@@ -432,7 +437,7 @@
     }
 
     function GetRelatedVidHTML(videoInfo) {
-        var videoHTML = RelatedVideoTemplate;
+        var videoHTML = RELATED_VIDEO_HTML_TEMPLATE;
 
         var videoIdRegex = /{{VideoID}}/g;
         var videoTitleRegex = /{{VideoTitle}}/g;
@@ -442,59 +447,141 @@
         var videoChannelIdRegex = /{{VideoChannelId}}/g;
         var videoViewsRegex = /{{VideoViews}}/g;
 
-        videoHTML = videoHTML.replace(videoIdRegex, videoInfo.videoId);
-        videoHTML = videoHTML.replace(videoTitleRegex, videoInfo.videoTitle);
-        videoHTML = videoHTML.replace(videoThumbnailRegex, videoInfo.videoThumbnail);
-        videoHTML = videoHTML.replace(videoChannelRegex, videoInfo.videoChannel);
-        videoHTML = videoHTML.replace(videoChannelIdRegex, videoInfo.videoChannelId);
-        videoHTML = videoHTML.replace(videoTimeRegex, videoInfo.videoDuration);
-        videoHTML = videoHTML.replace(videoViewsRegex, videoInfo.videoViews);
+        videoHTML = videoHTML.replace(videoIdRegex, videoInfo.YoutubeId);
+        videoHTML = videoHTML.replace(videoTitleRegex, videoInfo.Title);
+        videoHTML = videoHTML.replace(videoThumbnailRegex, videoInfo.Thumbnail);
+        videoHTML = videoHTML.replace(videoChannelRegex, videoInfo.ChannelTitle);
+        videoHTML = videoHTML.replace(videoChannelIdRegex, videoInfo.YoutubeChannelId);
+        videoHTML = videoHTML.replace(videoTimeRegex, videoInfo.Duration);
+        videoHTML = videoHTML.replace(videoViewsRegex, videoInfo.ViewCount);
 
         return videoHTML;
     }
 
     /************************* Signalr Response Functions *************************/
     function updateRelatedVideos(unseenVideos) {
-        var relatedVideos = $(".related-list-item");
+        var lastElement = getLastItemRelatedVideosList();
 
-        for (var i = 0; i < relatedVideos.length; i++) {
-            var relatedVideo = relatedVideos.eq(i);
-            var relatedVideoItemUrl = relatedVideo.find('a').attr('href').replace('/watch?', '');
-            var params = $.getQueryParameters(relatedVideoItemUrl);
-            var videoId = params["v"];
+        for (var i = 0; i < _relatedVideosList.length; i++) {
+            var videoId = getYoutubeIdFromRelatedVideo(_relatedVideosList[i]);
 
-            // If the video id isn't found in the unseen videos list, then
-            // we should remove it because the user has seen it
-            if (unseenVideos.indexOf(videoId) === -1) {
-                relatedVideo.remove();
+            // If the video isn't in the unseen list, then we add it back
+            // because the user might want to see it
+            if (unseenVideos.indexOf(videoId) !== -1) {
+                lastElement.before(_relatedVideosList[i]);
             }
-            else {
-                // We set the visibility property to hidden, we will restore that now
-                relatedVideo.css('visibility', 'visible');
-            }
-
+            
         }
 
-        // If the auto play video isn't present, then we have to add in a related video from
-        // the other regular related videos
-        var autoPlayBarVideoList = $('.autoplay-bar').first().find('.watch-sidebar-body').first().find('.video-list').first();
-        var autoPlayVideo = autoPlayBarVideoList.find('a').first();
-        
+        var autoPlayVideo = getAutoplayVideo();
         if (autoPlayVideo.length === 0) {
             // The up next video got removed, we have to move a video up
-            var watchRelated = $('#watch-related').first();
-            var firstRelatedVideo = watchRelated.find('.related-list-item').first();
-
+            var firstRelatedVideo = getFirstRegularRelatedVideo();
+            var autoPlayBarVideoList = getAutoplayVideoList();
             autoPlayBarVideoList.append(firstRelatedVideo);
 
         }
-
     }
 
     function updateRelatedVideosWithCollectionVideos(videoData) {
-        // TODO
 
+        // Handle filling in the auto-play video
+        if (videoData.length > 0) {
+            var autoplayList = getAutoplayVideoList();
+            var autoPlayVideoHtml = GetRelatedVidHTML(videoData[0]);
+            autoplayList.append(autoPlayVideoHtml);
+        }
+        
+        if (videoData.length > 1) {
+            // Add remaining videos to the regular related videos list after the last video
+            var lastElement = getLastItemRelatedVideosList();
+
+            for (var i = 1; i < videoData.length; i++) {
+                var collectionVideoHtml = GetRelatedVidHTML(videoData[i]);
+                lastElement.before(collectionVideoHtml);
+            }
+        }
+        
     }
+
+    function getYoutubeIdFromRelatedVideo(relatedVideo) {
+        var relatedVideoItemUrl = relatedVideo.find('a').attr('href').replace('/watch?', '');
+        var params = $.getQueryParameters(relatedVideoItemUrl);
+        var videoId = params["v"];
+        return videoId;
+    }
+
+    function getAutoplayVideoList() {
+        return $('.autoplay-bar').find('ul.video-list').first();
+    }
+
+    function getAutoplayVideo() {
+        // Returns just the auto play video
+        return getAutoplayVideoList().find('.video-list-item').first();
+    }
+    
+    function getRegularRelatedVideosList() {
+        return $('#watch-related');
+    }
+
+    function getFirstRegularRelatedVideo() {
+        return getRegularRelatedVideosList().find('.video-list-item').first();
+    }
+
+    function getRegularRelatedVideos() {
+        return getRegularRelatedVideosList().find('.video-list-item');
+    }
+
+    function getAllRelatedVideos() {
+        return $('.related-list-item');
+    }
+
+    function getLastItemRelatedVideosList() {
+        // We assume this function is called when there are no videos in the related videos list
+        // Because of no videos in the list, we actually just grab the first child, 
+        // and start adding stuff before it to "add" videos
+        return getRegularRelatedVideosList().children().first();
+    }
+
+    function setVideoEventsIfOnVideo(url) {
+
+        if (url.indexOf('/watch?v=') > -1) {
+            _video = $('video').get(0);
+
+            _video.addEventListener('ended', function (e) {
+                var autoplayLink = getAutoplayVideo().find('a').get(0);
+                autoplayLink.click();
+            });
+
+            _video.addEventListener('progress', function (e) {
+                // When a video starts we remove related videos that the user has already seen
+                // We use the progress event because the start event doesn't always get fired
+                var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
+                var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
+
+                if (lastPlayedVideoUrl !== undefined && util.quotify(currVideoUrl) !== lastPlayedVideoUrl) {
+                    // This is a new video, we need to change the related videos
+                    // First record video url to local storage
+                    localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
+
+                    // Even though the video hasn't ended yet, we add it to the user's watched video list
+                    chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO }, function (response) {
+                        // Now that the current video has been recorded in the database, 
+                        // we change related videos, because now the collection won't include
+                        // the current video as unwatched and put it in the collection
+                        RemoveWatchedRelatedVideos();
+                    });
+
+                }
+
+            });
+        }
+        else {
+            waitUntilUserBrowsesToVideo();
+        }
+        
+    }
+
     
 });
 

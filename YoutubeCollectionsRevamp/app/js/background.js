@@ -6,6 +6,7 @@ var ytCollectionsUrl = 'http://localhost:5507/';
 var _hub = null;
 var _hubConnection = null;
 
+initialize();
 initializeHub();
 
 
@@ -24,12 +25,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 	    case RECORD_WATCHED_VIDEO:
 	        recordWatchedVideo(sender.tab.id);
+	        sendResponse({ completed: true });
 	        break;
 
 	    case CHANGE_RELATED_VIDEOS:
 	        // We immediately set the currently being watched video id
 	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
 	        changeRelatedVideos(request.videoIds);
+	        break;
+
+	    case GET_CURRENT_YOUTUBE_URL:
+	        getYoutubeTabUrl(sender.tab.id);
 	        break;
 
 	}
@@ -132,6 +138,10 @@ function isYoutubeLink(url) {
     return url.indexOf("https://www.youtube.com/watch?v=") > -1;
 }
 
+function initialize() {
+    
+}
+
 function initializeHub() {
 
     _hubConnection = $.hubConnection(HUB_SERVER_URL);
@@ -208,7 +218,11 @@ function onRelatedVideosChange(msgObj) {
 }
 
 
-
+function getYoutubeTabUrl(tabId) {
+    chrome.tabs.get(tabId, function (tab) {
+        chrome.tabs.sendMessage(tab.id, { message: FOUND_CURRENT_YOUTUBE_URL, url: tab.url });
+    })
+}
 
 
 
