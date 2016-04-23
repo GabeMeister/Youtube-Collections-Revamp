@@ -50,7 +50,7 @@ var RELATED_VIDEO_HTML_TEMPLATE = "<li class=\"video-list-item related-list-item
 " - Duration: {{VideoTime}}. </span> <span class=\"stat attribution\"> <span class=\"" +
 "g-hovercard\" data-ytid=\"{{VideoChannelId}}\" data-name=\"related\"> by <span class=\"" +
 " g-hovercard\" data-ytid=\"{{VideoChannelId}}\" data-name=\"\">{{VideoChannel}}</span> " +
-"</span> </span> <span class=\"stat view-count\">{{VideoViews}}</span></a> </div><div " +
+"</span> </span> <span class=\"stat view-count\">{{VideoViews}} views</span></a> </div><div " +
 "class=\"thumb-wrapper\"> <a href=\"/watch?v={{VideoID}}\" class=\" thumb-link spf-link" +
 " yt-uix-sessionlink\" tabindex=\"-1\" rel=\"spf-prefetch\" data-sessionlink=\"" +
 "feature=related&amp;ei=15gdVe3RMs62-gOnqIHABA&amp;ved=CBcQzRooEg\" aria-hidden=\"true\">" +

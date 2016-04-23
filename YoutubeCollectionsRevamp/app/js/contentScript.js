@@ -432,7 +432,7 @@
         return finalDurationFormat;
     }
 
-    function FormatVideoViews(views) {
+    function formatVideoViews(views) {
         return views.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
@@ -453,7 +453,9 @@
         videoHTML = videoHTML.replace(videoChannelRegex, videoInfo.ChannelTitle);
         videoHTML = videoHTML.replace(videoChannelIdRegex, videoInfo.YoutubeChannelId);
         videoHTML = videoHTML.replace(videoTimeRegex, videoInfo.Duration);
-        videoHTML = videoHTML.replace(videoViewsRegex, videoInfo.ViewCount);
+
+        var viewCountWithCommas = formatVideoViews(videoInfo.ViewCount);
+        videoHTML = videoHTML.replace(videoViewsRegex, viewCountWithCommas);
 
         return videoHTML;
     }
