@@ -16,6 +16,10 @@
                 removeVideo(request.videoId);
                 break;
 
+            case BEGIN_REMOVING_RELATED_VIDEOS:
+                beginRemovingRelatedVideos();
+                break;
+
             case UPDATE_RELATED_VIDEOS:
                 updateRelatedVideos(request.unseenVideoIds);
                 break;
@@ -76,14 +80,9 @@
 
 
     /************************* DOM Interactions *************************/
-    function removeWatchedRelatedVideos() {
-        var relatedVideoIds = getRelatedVideoIds();
-        var currentVideoIdBeingWatched = util.unquotify(localStorage.getItem(LAST_PLAYED_VIDEO_URL));
-
-        chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoIdBeingWatched });
-
+    function removeRelatedVideos() {
         var relatedVidsList = getAllRelatedVideos();
-        // To "track" the original related videos, we keep track of them in this list
+        // To "remember" the original related videos, we keep track of them in this list
         _relatedVideosList = [];
         for (var i = 0; i < relatedVidsList.length; i++) {
             _relatedVideosList.push(relatedVidsList.eq(i));
@@ -100,12 +99,26 @@
         }, 2000);
     }
 
-    function getRelatedVideoIds() {
+    function getRelatedVideoIdsFromDom() {
         var relatedVideoIds = [];
         var relatedVids = $('.related-list-item');
 
         for (var i = 0; i < relatedVids.length; i++) {
             var relatedVideoItemUrl = relatedVids.eq(i).find('a').attr('href').replace('/watch?', '');
+            var params = $.getQueryParameters(relatedVideoItemUrl);
+            var videoId = params["v"];
+
+            relatedVideoIds.push(videoId);
+        }
+
+        return relatedVideoIds;
+    }
+
+    function getRelatedVideoIdsFromCache() {
+        var relatedVideoIds = [];
+
+        for (var i = 0; i < _relatedVideosList.length; i++) {
+            var relatedVideoItemUrl = _relatedVideosList[i].find('a').attr('href').replace('/watch?', '');
             var params = $.getQueryParameters(relatedVideoItemUrl);
             var videoId = params["v"];
 
@@ -251,38 +264,46 @@
         if (url.indexOf('/watch?v=') > -1) {
             _video = $('video').get(0);
 
-            _video.addEventListener('ended', function (e) {
-                var autoplayLink = getAutoplayVideo().find('a').get(0);
-                autoplayLink.click();
-            });
-
-            _video.addEventListener('progress', function (e) {
-                // When a video starts we remove related videos that the user has already seen
-                // We use the progress event because the start event doesn't always get fired
-                var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
-                var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
-
-                if (lastPlayedVideoUrl !== undefined && util.quotify(currVideoUrl) !== lastPlayedVideoUrl) {
-                    // This is a new video, we need to change the related videos
-                    // First record video url to local storage
-                    localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
-
-                    // Even though the video hasn't ended yet, we add it to the user's watched video list
-                    chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO }, function (response) {
-                        // Now that the current video has been recorded in the database, 
-                        // we change related videos, because now the collection won't include
-                        // the current video as unwatched and put it in the collection
-                        removeWatchedRelatedVideos();
-                    });
-
-                }
-
-            });
+            _video.addEventListener('ended', videoEndedEventHandler);
+            _video.addEventListener('progress', videoProgressEventHandler);
         }
         else {
             waitUntilUserBrowsesToVideo();
         }
         
+    }
+
+    function beginRemovingRelatedVideos() {
+        var relatedVideoIds = getRelatedVideoIdsFromCache();
+        var currentVideoUrlBeingWatched = util.unquotify(localStorage.getItem(LAST_PLAYED_VIDEO_URL));
+
+        chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoUrlBeingWatched });
+    }
+
+    /************************* Video Event Handlers *************************/
+    function videoEndedEventHandler(e) {
+        var autoplayLink = getAutoplayVideo().find('a').get(0);
+        autoplayLink.click();
+    }
+
+    function videoProgressEventHandler(e) {
+        // When a video starts we remove related videos that the user has already seen
+        // We use the progress event because the start event doesn't always get fired
+        var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
+        var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
+
+        if (util.quotify(currVideoUrl) !== lastPlayedVideoUrl) {
+            // This is a new video the user has browsed to, we need to change the related videos
+            // First record the current video url to local storage as "last played"
+            localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
+
+            removeRelatedVideos();
+
+            // Even though the video hasn't ended yet, we add it to the user's watched video list
+            chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO, currentVideoId: currVideoUrl });
+
+            
+        }
     }
 
 });

@@ -24,13 +24,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        break;
 
 	    case RECORD_WATCHED_VIDEO:
-	        recordWatchedVideo(sender.tab.id);
-	        sendResponse({ completed: true });
+	        // We immediately set the currently being watched video id so we can 
+	        // send a message to the correct tab later
+	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
+	        recordWatchedVideo(request.currentVideoId);
 	        break;
 
 	    case CHANGE_RELATED_VIDEOS:
-	        // We immediately set the currently being watched video id
-	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
 	        changeRelatedVideos(request.videoIds);
 	        break;
 
@@ -68,30 +68,24 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
-function recordWatchedVideo(id) {
-    chrome.tabs.get(id, function (tab) {
+function recordWatchedVideo(currentVideoUrl) {
 
-        var youtubeTabUrl = tab.url.replace('https://www.youtube.com/watch?', '');
-        var params = $.getQueryParameters(youtubeTabUrl);
-        var videoId = params["v"];
-        var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
-        var dateViewed = formatDateTime(new Date());
+    var urlQueryString = currentVideoUrl.replace('https://www.youtube.com/watch?', '');
+    var params = $.getQueryParameters(urlQueryString);
+    var videoId = params["v"];
 
-        if (_hub === null) {
-            initializeHub();
+    var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+    var dateViewed = formatDateTime(new Date());
 
-            setTimeout(function () {
-                _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
-            }, 1000);
-        }
-        else {
-            _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
-        }
+    var msToWait = 0;
+    if (_hub === null) {
+        initializeHub();
+        msToWait = 1000;
+    }
 
-        
-
-        
-    });
+    setTimeout(function () {
+        _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+    }, msToWait);
 
 }
 
@@ -111,7 +105,7 @@ function markVideoAsWatched(info, tab) {
         var dateViewed = formatDateTime(new Date());
         
 		setTimeout(function() {
-			_hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+		    _hub.invoke('MarkVideoAsWatched', videoId, userYoutubeId, dateViewed);
 		}, 1000);
 
 
@@ -155,6 +149,7 @@ function initializeHub() {
     _hubConnection = $.hubConnection(HUB_SERVER_URL);
     _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
     _hub.on('onRelatedVideosChange', onRelatedVideosChange);
+    _hub.on('onWatchedVideoInserted', onWatchedVideoInserted);
 
     _hubConnection.start();
 
@@ -188,7 +183,6 @@ function changeRelatedVideos(relatedVideoIds) {
     var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
     
-
     if (areCollectionsOn) {
         var selectedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
         _hub.invoke('GetVideosForCollection', userYoutubeId, selectedCollection.title);
@@ -231,6 +225,11 @@ function getYoutubeTabUrl(tabId) {
     })
 }
 
-
+function onWatchedVideoInserted(msgObj) {
+    var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
+    chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { message: BEGIN_REMOVING_RELATED_VIDEOS });
+    });
+}
 
 
