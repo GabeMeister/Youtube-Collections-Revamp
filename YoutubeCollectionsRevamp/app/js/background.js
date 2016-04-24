@@ -217,7 +217,6 @@ function onRelatedVideosChange(msgObj) {
 
 }
 
-
 function getYoutubeTabUrl(tabId) {
     chrome.tabs.get(tabId, function (tab) {
         chrome.tabs.sendMessage(tab.id, { message: FOUND_CURRENT_YOUTUBE_URL, url: tab.url });
