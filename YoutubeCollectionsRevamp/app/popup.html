@@ -35,6 +35,15 @@
             <p>{{displayMessage}}</p>
         </div>
     </div>
+
+
+    <div id="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
+        <div>
+            <p>Enter new collection name:</p>
+            <input ng-model="newCollectionName"/>
+            <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+        </div>
+    </div>
     <!--END OVERLAY MESSAGES SECTION-->
 
 
@@ -45,8 +54,8 @@
     <div class="taskbar" id="taskbar1">
         <!--<button ng-click="restartInitialization()">Restart</button>
         <button ng-click="restartCollectionItems()">Reset Collections</button>-->
-        <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn" /><span class="onOffLabel">Turn Youtube Collections On</span></label>
-        
+        <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn" /><span class="onOffLabel">Enable Youtube Collections</span></label>
+        <button ng-click="renameCollection()" class="inline-button">Rename</button>
     </div>
     <div class="taskbar" id="taskbar2">
         <input class="newCollectionInput"type="text" ng-model="newCollectionTitle"/>

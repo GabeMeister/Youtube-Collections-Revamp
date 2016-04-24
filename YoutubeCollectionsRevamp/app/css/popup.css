@@ -105,7 +105,7 @@ pre code {
 }
 
 label {
-  display: block;
+  display: inline-block;
   margin-bottom: 15px;
 }
 
@@ -294,4 +294,8 @@ option {
     /* This is the same as .not-in-collection */
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
+}
+
+.inline-button {
+    display: inline-block;
 }

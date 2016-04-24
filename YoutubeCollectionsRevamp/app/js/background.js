@@ -70,9 +70,6 @@ chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
 function recordWatchedVideo(id) {
     chrome.tabs.get(id, function (tab) {
-        if (_hub === null) {
-            initializeHub();
-        }
 
         var youtubeTabUrl = tab.url.replace('https://www.youtube.com/watch?', '');
         var params = $.getQueryParameters(youtubeTabUrl);
@@ -80,9 +77,20 @@ function recordWatchedVideo(id) {
         var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
         var dateViewed = formatDateTime(new Date());
 
-        setTimeout(function () {
+        if (_hub === null) {
+            initializeHub();
+
+            setTimeout(function () {
+                _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+            }, 1000);
+        }
+        else {
             _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
-        }, 1000);
+        }
+
+        
+
+        
     });
 
 }

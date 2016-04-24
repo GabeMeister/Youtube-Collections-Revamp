@@ -107,6 +107,24 @@ app.controller('MainCtrl', function ($scope, storage) {
         return className;
     }
 
+    $scope.renameCollection = function (collectionName) {
+        $scope.oldCollectionName = $scope.selectedCollection.title;
+        $scope.newCollectionName = $scope.selectedCollection.title;
+        $scope.extensionState = RENAMING_COLLECTION;
+    }
+
+    $scope.confirmCollectionRename = function (newCollectionName) {
+        if ($scope.oldCollectionName !== newCollectionName) {
+            $scope.selectedCollection.title = newCollectionName;
+            var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+            _hub.invoke('RenameCollection', $scope.oldCollectionName, newCollectionName, userYoutubeId);
+        }
+
+        // Removes popup window
+        $scope.extensionState = INITIALIZED;
+        
+    }
+
 
     
 
