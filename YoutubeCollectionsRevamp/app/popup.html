@@ -65,10 +65,10 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div ng-repeat="channel in subscriptionList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel)"></div>
+            <div ng-class="isChannelInCollection(channel.title)" ng-repeat="channel in subscriptionList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel)"></div>
         </div>
         <div class='container'>
-            <div ng-repeat="channel in collectionItemsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel)"></div>
+            <div ng-class="'in-collection'" ng-repeat="channel in collectionItemsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel)"></div>
         </div>
     </div>
     <!--END CHANNELS SECTION-->

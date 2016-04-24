@@ -134,7 +134,7 @@
     function waitUntilUserBrowsesToVideo() {
         setTimeout(function () {
             chrome.runtime.sendMessage({ message: GET_CURRENT_YOUTUBE_URL });
-        }, 4000);
+        }, 2000);
     }
 
     function GetRelatedVideoIds() {
@@ -452,12 +452,23 @@
         videoHTML = videoHTML.replace(videoThumbnailRegex, videoInfo.Thumbnail);
         videoHTML = videoHTML.replace(videoChannelRegex, videoInfo.ChannelTitle);
         videoHTML = videoHTML.replace(videoChannelIdRegex, videoInfo.YoutubeChannelId);
-        videoHTML = videoHTML.replace(videoTimeRegex, videoInfo.Duration);
+
+        var formattedDuration = formatDuration(videoInfo.Duration);
+        videoHTML = videoHTML.replace(videoTimeRegex, formattedDuration);
 
         var viewCountWithCommas = formatVideoViews(videoInfo.ViewCount);
         videoHTML = videoHTML.replace(videoViewsRegex, viewCountWithCommas);
 
         return videoHTML;
+    }
+
+    function formatDuration(duration) {
+        var result = '';
+        if (duration.startsWith('00:')) {
+            result = duration.replace('00:', '');
+        }
+
+        return result;
     }
 
     /************************* Signalr Response Functions *************************/

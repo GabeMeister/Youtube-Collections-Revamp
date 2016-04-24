@@ -99,6 +99,14 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.invoke('DeleteCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
     }
 
+    $scope.isChannelInCollection = function (channelName) {
+        var className = 'not-in-collection';
+        if (util.doesChannelExist(channelName, $scope.selectedCollection.channelItems)) {
+            className = 'in-collection';
+        }
+        return className;
+    }
+
 
     
 

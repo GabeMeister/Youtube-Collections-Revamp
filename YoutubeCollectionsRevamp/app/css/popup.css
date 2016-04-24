@@ -191,7 +191,7 @@ button:hover {
 .gu-mirror {
   margin: 5px;
   padding: 10px;
-  background-color: rgba(0, 0, 0, 0.2);
+  /*background-color: rgba(0, 0, 0, 0.2);*/
   transition: opacity 0.4s ease-in-out;
 }
 .container div {
@@ -277,4 +277,21 @@ option {
 
 .onOffLabel {
     color: #942A57;
+}
+
+.in-collection {
+    /*background-color: rgba(255, 6, 6, 0.76);*/
+    background-color: rgba(7, 95, 0, 0.77);
+    border-radius: 4px;
+}
+
+.not-in-collection {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.collection-channel {
+    /* This is the same as .not-in-collection */
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
 }
