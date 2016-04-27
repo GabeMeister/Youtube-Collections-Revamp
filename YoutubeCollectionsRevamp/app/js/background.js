@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        // We immediately set the currently being watched video id so we can 
 	        // send a message to the correct tab later
 	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
-	        recordWatchedVideo(request.currentVideoId);
+	        recordWatchedVideo(request.currentVideoId, sendResponse);
 	        break;
 
 	    case CHANGE_RELATED_VIDEOS:
@@ -68,25 +68,30 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
-function recordWatchedVideo(currentVideoUrl) {
+function recordWatchedVideo(currentVideoUrl, responseFunc) {
+    var connected = localStorage.getItem(CONNECTED_WITH_SERVER) === "true";
 
-    var urlQueryString = currentVideoUrl.replace('https://www.youtube.com/watch?', '');
-    var params = $.getQueryParameters(urlQueryString);
-    var videoId = params["v"];
+    if (connected) {
+        var urlQueryString = currentVideoUrl.replace('https://www.youtube.com/watch?', '');
+        var params = $.getQueryParameters(urlQueryString);
+        var videoId = params["v"];
 
-    var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
-    var dateViewed = formatDateTime(new Date());
+        var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+        var dateViewed = formatDateTime(new Date());
 
-    var msToWait = 0;
-    if (_hub === null) {
-        initializeHub();
-        msToWait = 1000;
+        var msToWait = 0;
+        if (_hub === null) {
+            initializeHub();
+            msToWait = 1000;
+        }
+
+        setTimeout(function () {
+            _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+        }, msToWait);
     }
 
-    setTimeout(function () {
-        _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
-    }, msToWait);
-
+    responseFunc({ success: connected });
+    
 }
 
 function markVideoAsWatched(info, tab) {
@@ -147,11 +152,18 @@ function initialize() {
 function initializeHub() {
 
     _hubConnection = $.hubConnection(HUB_SERVER_URL);
+    _hubConnection.logging = true;
     _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
     _hub.on('onRelatedVideosChange', onRelatedVideosChange);
     _hub.on('onWatchedVideoInserted', onWatchedVideoInserted);
 
-    _hubConnection.start();
+    _hubConnection.start()
+    .done(function () {
+        localStorage.setItem(CONNECTED_WITH_SERVER, 'true');
+    })
+    .fail(function () {
+        localStorage.setItem(CONNECTED_WITH_SERVER, 'false');
+    });
 
 }
 

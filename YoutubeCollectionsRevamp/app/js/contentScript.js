@@ -71,6 +71,9 @@
 
         relatedVidToRemove.remove();
 
+
+        ensureAutoplayVideoIsPresent();
+
     }
 
     function initialize() {
@@ -189,14 +192,7 @@
             
         }
 
-        var autoPlayVideo = getAutoplayVideo();
-        if (autoPlayVideo.length === 0) {
-            // The up next video got removed, we have to move a video up
-            var firstRelatedVideo = getFirstRegularRelatedVideo();
-            var autoPlayBarVideoList = getAutoplayVideoList();
-            autoPlayBarVideoList.append(firstRelatedVideo);
-
-        }
+        ensureAutoplayVideoIsPresent();
     }
 
     function updateRelatedVideosWithCollectionVideos(videoData) {
@@ -280,6 +276,17 @@
         chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoUrlBeingWatched });
     }
 
+    function ensureAutoplayVideoIsPresent()
+    {
+        var autoPlayVideo = getAutoplayVideo();
+        if (autoPlayVideo.length === 0) {
+            // The up next video got removed, we have to move a video up
+            var firstRelatedVideo = getFirstRegularRelatedVideo();
+            var autoPlayBarVideoList = getAutoplayVideoList();
+            autoPlayBarVideoList.append(firstRelatedVideo);
+        }
+    }
+
     /************************* Video Event Handlers *************************/
     function videoEndedEventHandler(e) {
         var autoplayLink = getAutoplayVideo().find('a').get(0);
@@ -297,10 +304,14 @@
             // First record the current video url to local storage as "last played"
             localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
 
-            removeRelatedVideos();
+            
 
             // Even though the video hasn't ended yet, we add it to the user's watched video list
-            chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO, currentVideoId: currVideoUrl });
+            chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO, currentVideoId: currVideoUrl }, function (response) {
+                if (response.success) {
+                    removeRelatedVideos();
+                }
+            });
 
             
         }
