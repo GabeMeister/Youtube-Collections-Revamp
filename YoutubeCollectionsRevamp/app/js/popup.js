@@ -101,7 +101,7 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     $scope.isChannelInCollection = function (channelName) {
         var className = 'not-in-collection';
-        if (util.doesChannelExist(channelName, $scope.selectedCollection.channelItems)) {
+        if ($scope.selectedCollection !== null && util.doesChannelExist(channelName, $scope.selectedCollection.channelItems)) {
             className = 'in-collection';
         }
         return className;
@@ -193,6 +193,8 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.displayMessage = 'Done fetching channel subscriptions!';
         $scope.$apply();
 
+        // We set a timeout here because the user needs to have a little bit of 
+        // time to read the display message, because it will automatically dissappear.
         setTimeout(function () {
             $scope.extensionState = INITIALIZED;
             $scope.$apply();
@@ -223,7 +225,8 @@ app.controller('MainCtrl', function ($scope, storage) {
 
         return {
             id: channel.SubscriptionYoutubeChannelId,
-            title: channel.SubscriptionChannelTitle
+            title: channel.SubscriptionChannelTitle,
+            thumbnail: channel.SubscriptionChannelThumbnail
         };
 
     }
