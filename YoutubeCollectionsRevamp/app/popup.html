@@ -74,10 +74,24 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div ng-class="isChannelInCollection(channel.title)" ng-repeat="channel in subscriptionList" ng-bind="channel.title" ng-click="insertChannelIntoCollection(channel)"></div>
+            <div class="collectionItem" ng-class="isChannelInCollection(channel.title)" ng-repeat="channel in subscriptionList" ng-click="insertChannelIntoCollection(channel)">
+                <div class="collectionItemSeperator thumbnailWrapper">
+                    <img ng-src="https://i.imgur.com/QwjrkCE.png" class="channelThumbnail" />
+                </div>
+                <div class="collectionItemSeperator titleWrapper">
+                    <span ng-bind="channel.title" class="collectionItemTitle"></span>
+                </div>
+            </div>
         </div>
         <div class='container'>
-            <div ng-class="'in-collection'" ng-repeat="channel in collectionItemsList" ng-bind="channel.title" ng-click="deleteChannelFromCollection(channel)"></div>
+            <div class="collectionItem" ng-class="'in-collection'" ng-repeat="channel in collectionItemsList" ng-click="deleteChannelFromCollection(channel)">
+                <div class="collectionItemSeperator thumbnailWrapper">
+                    <img ng-src="https://i.imgur.com/QwjrkCE.png" class="channelThumbnail" />
+                </div>
+                <div class="collectionItemSeperator titleWrapper">
+                    <span ng-bind="channel.title" class="collectionItemtitle"></span>
+                </div>
+            </div>
         </div>
     </div>
     <!--END CHANNELS SECTION-->
