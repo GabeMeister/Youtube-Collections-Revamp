@@ -137,6 +137,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onChannelIdInserted', onChannelIdInserted);
         _hub.on('onSubscriptionsInserted', onSubscriptionsInserted);
         _hub.on('onProgressChanged', onProgressChanged);
+        _hub.on('onNewSubscriptionsInserted', onNewSubscriptionsInserted);
 
         _hubConnection.start();
         
@@ -200,6 +201,11 @@ app.controller('MainCtrl', function ($scope, storage) {
             $scope.$apply();
         }, 2000);
         
+    }
+
+    function onNewSubscriptionsInserted() {
+        // TODO
+
     }
 
     function onProgressChanged(msgObj) {

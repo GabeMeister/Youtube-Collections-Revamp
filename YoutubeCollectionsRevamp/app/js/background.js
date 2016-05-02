@@ -23,6 +23,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
 	        break;
 
+	    case NOTIFY_CHANNEL_ID_NOT_FOUND_MSG:
+            localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_NOT_FOUND))
+	        break;
+
 	    case RECORD_WATCHED_VIDEO:
 	        // We immediately set the currently being watched video id so we can 
 	        // send a message to the correct tab later

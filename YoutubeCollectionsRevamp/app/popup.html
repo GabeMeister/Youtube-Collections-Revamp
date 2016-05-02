@@ -10,7 +10,7 @@
     <div id="overlay" ng-if="extensionState===null||extensionState==='undefined'||extensionState===''">
         <div>
             <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
-            <button ng-click="fetchYoutubeChannelId()">Ok, got it.</button>
+            <button ng-click="fetchYoutubeChannelId()">Got it!</button>
         </div>
     </div>
 
@@ -26,6 +26,13 @@
         <div>
             <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
             <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
+        </div>
+    </div>
+
+    <div id="overlay" ng-if="extensionState==='CHANNEL_ID_NOT_FOUND'">
+        <div>
+            <p>Your channel id wasn't found. Log into YouTube and try again. </p>
+            <button ng-click="fetchYoutubeChannelId()">Try again!</button>
         </div>
     </div>
 
