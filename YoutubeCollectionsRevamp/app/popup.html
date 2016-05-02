@@ -81,9 +81,9 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div class="collectionItem" ng-class="isChannelInCollection(channel.title)" ng-repeat="channel in subscriptionList" ng-click="insertChannelIntoCollection(channel)">
+            <div class="collectionItem" ng-class="getChannelStatusCss(channel.title)" ng-repeat="channel in subscriptionList" ng-click="insertChannelIntoCollection(channel)">
                 <div class="collectionItemSeperator thumbnailWrapper">
-                    <img ng-src="{{channel.thumbnail}}" class="channelThumbnail" />
+                    <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
                 </div>
                 <div class="collectionItemSeperator titleWrapper">
                     <span ng-bind="channel.title" class="collectionItemTitle"></span>
@@ -91,9 +91,9 @@
             </div>
         </div>
         <div class='container'>
-            <div class="collectionItem" ng-class="'in-collection'" ng-repeat="channel in collectionItemsList" ng-click="deleteChannelFromCollection(channel)">
+            <div class="collectionItem" ng-class="getChannelStatusCss(channel.title)" ng-repeat="channel in collectionItemsList" ng-click="deleteChannelFromCollection(channel)">
                 <div class="collectionItemSeperator thumbnailWrapper">
-                    <img ng-src="{{channel.thumbnail}}" class="channelThumbnail" />
+                    <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
                 </div>
                 <div class="collectionItemSeperator titleWrapper">
                     <span ng-bind="channel.title" class="collectionItemTitle"></span>

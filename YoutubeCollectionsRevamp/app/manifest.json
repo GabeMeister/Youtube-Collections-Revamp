@@ -1,33 +1,36 @@
 {
-	"name": "Youtube Collections Playground",
-	"description": "A chrome extension to test youtube collection database interaction",
-	"version": "2.0",
-	"permissions": [
-		"activeTab",
-		"storage",
-		"tabs",
+    "name": "Youtube Collections Playground",
+    "description": "A chrome extension to test youtube collection database interaction",
+    "version": "2.0",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "tabs",
         "webNavigation",
         "contextMenus",
-		"http://localhost:5507/*",
-		"http://localhost:3851/*"
-	],
-	"browser_action": {
-		"default_icon": "images/icon.png",
-		"default_popup": "popup.html",
-		"default_title": "Playground"
-	},
-	"content_scripts": [
-		{
-			"matches": ["https://www.youtube.com/*"],
-			"js": ["js/constants.js", "js/util.js", "js/jquery.js", "js/jQueryParameters.js", "js/jquery.signalR-2.2.0.js", "js/contentScript.js"]
-		}
-	],
+        "http://localhost:5507/*",
+        "http://localhost:3851/*"
+    ],
+    "browser_action": {
+        "default_icon": "images/icon.png",
+        "default_popup": "popup.html",
+        "default_title": "Playground"
+    },
+    "web_accessible_resources": [
+        "images/*.png"
+    ],
+    "content_scripts": [
+        {
+            "matches": [ "https://www.youtube.com/*" ],
+            "js": [ "js/constants.js", "js/util.js", "js/jquery.js", "js/jQueryParameters.js", "js/jquery.signalR-2.2.0.js", "js/contentScript.js" ]
+        }
+    ],
     "background": {
         "scripts": [ "js/constants.js", "js/util.js", "js/jquery.js", "js/jQueryParameters.js", "js/jquery.signalR-2.2.0.js", "js/background.js" ],
         "persistent": false
     },
     "icons": {
-		"16": "images/icon.png"
-	},
-	"manifest_version": 2
+        "16": "images/icon.png"
+    },
+    "manifest_version": 2
 }

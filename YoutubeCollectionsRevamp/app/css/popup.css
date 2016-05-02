@@ -300,6 +300,11 @@ option {
     border-radius: 4px;
 }
 
+.videos-not-loaded {
+    background-color: rgba(220, 37, 19, 0.76);
+    border-radius: 4px;
+}
+
 .collection-channel {
     /* This is the same as .not-in-collection */
     background-color: rgba(0, 0, 0, 0.2);

@@ -99,12 +99,29 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.invoke('DeleteCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
     }
 
-    $scope.isChannelInCollection = function (channelName) {
+    $scope.getChannelStatusCss = function (channelName) {
+        // The default color is not-in-collection class
         var className = 'not-in-collection';
-        if ($scope.selectedCollection !== null && util.doesChannelExist(channelName, $scope.selectedCollection.channelItems)) {
+        var allChannels = JSON.parse(localStorage.getItem(SUBSCRIPTIONS_LIST));
+        var currentChannel = util.findChannelByName(channelName, allChannels);
+
+        // First check if channel has videos. If it doesn't, then we mark it red
+        if (currentChannel !== null && !currentChannel.loaded) {
+            className = 'videos-not-loaded';
+        }
+        else if ($scope.selectedCollection !== null && util.doesChannelExist(channelName, $scope.selectedCollection.channelItems)) {
             className = 'in-collection';
         }
+
         return className;
+    }
+
+    $scope.getChannelThumbnail = function (channel) {
+        var thumbnail = channel.thumbnail;
+        if (!channel.loaded) {
+            thumbnail = "https://i.imgur.com/uGSuKTt.png";
+        }
+        return thumbnail;
     }
 
     $scope.renameCollection = function (collectionName) {
@@ -232,7 +249,8 @@ app.controller('MainCtrl', function ($scope, storage) {
         return {
             id: channel.SubscriptionYoutubeChannelId,
             title: channel.SubscriptionChannelTitle,
-            thumbnail: channel.SubscriptionChannelThumbnail
+            thumbnail: channel.SubscriptionChannelThumbnail,
+            loaded: channel.AreVideosLoaded
         };
 
     }

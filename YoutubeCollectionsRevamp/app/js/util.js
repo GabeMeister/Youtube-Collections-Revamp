@@ -12,6 +12,19 @@ var util = {
         return foundChannel;
     },
 
+    findChannelByName: function (title, channelList) {
+        var foundChannel = null;
+
+        for (var i = 0; i < channelList.length; i++) {
+            if (channelList[i].title === title) {
+                foundChannel = channelList[i];
+                break;
+            }
+        }
+
+        return foundChannel;
+    },
+
     findCollection: function(collection, collectionList) {
         var foundCollection = null;
 
