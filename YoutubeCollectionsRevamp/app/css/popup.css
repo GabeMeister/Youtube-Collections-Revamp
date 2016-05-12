@@ -347,3 +347,14 @@ option {
     width: 220px;
     margin-left: 15px;
 }
+
+#notLoadedWarning {
+    position: absolute;
+    height: auto;
+    width: 200px;
+    right: 10px;
+    bottom: 10px;
+    background-color: rgba(220, 37, 19, 0.76);
+    padding: 10px;
+    border-radius: 4px;
+}

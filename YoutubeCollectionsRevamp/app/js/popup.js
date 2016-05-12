@@ -119,9 +119,20 @@ app.controller('MainCtrl', function ($scope, storage) {
     $scope.getChannelThumbnail = function (channel) {
         var thumbnail = channel.thumbnail;
         if (!channel.loaded) {
+            // Couldn't figure out how to show a local picture, just using imgur for now
             thumbnail = "https://i.imgur.com/uGSuKTt.png";
         }
         return thumbnail;
+    }
+
+    $scope.getTooltipCss = function (channel) {
+        var cssClass = 'completelyHidden';
+        if (!channel.loaded) {
+            // If the channel isn't loaded, then we actually do need to show the tool tip on hover
+            cssClass = 'tooltiptext';
+        }
+
+        return cssClass;
     }
 
     $scope.renameCollection = function (collectionName) {
@@ -142,6 +153,11 @@ app.controller('MainCtrl', function ($scope, storage) {
         
     }
 
+    $scope.setNotLoadedWarning = function (channel) {
+        // If channel's loaded, then no warning. 
+        // If channel's not loaded, then yes, we want the warning to show
+        $scope.isHoveringOnNotLoadedChannel = !channel.loaded;
+    }
 
     
 
@@ -179,6 +195,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         // already stored via the selected collection channel items
         $scope.collectionItemsList = [];
 
+        $scope.isHoveringOnNotLoadedChannel = false;
     }
 
     function clearScope() {

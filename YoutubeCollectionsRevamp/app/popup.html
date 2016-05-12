@@ -2,7 +2,8 @@
 <html ng-app="youtube-collections-revamp">
 <head>
 	<title>Youtube Playground</title>
-	<link href="css/popup.css" rel="stylesheet" type="text/css">
+	<link href="css/popup.css" rel="stylesheet" type="text/css" />
+    <link href="css/balloon.css" rel="stylesheet" type="text/css" />
 </head>
 <body ng-controller="MainCtrl">
 
@@ -65,8 +66,10 @@
         <button ng-click="renameCollection()" class="inline-button">Rename</button>
     </div>
     <div class="taskbar" id="taskbar2">
-        <input class="newCollectionInput"type="text" ng-model="newCollectionTitle"/>
-        <button ng-click="insertCollection()">Add</button>
+        <input class="newCollectionInput" type="text" ng-model="newCollectionTitle" />
+        <button ng-click="insertCollection()">
+            Add
+        </button>
         <select class="collectionsDropdown"
                 ng-model="selectedCollection"
                 ng-options="selectedCollection.title for selectedCollection in collectionsList">
@@ -81,7 +84,12 @@
     <!--CHANNELS SECTION-->
     <div class='wrapper'>
         <div class='container'>
-            <div class="collectionItem" ng-class="getChannelStatusCss(channel.title)" ng-repeat="channel in subscriptionList" ng-click="insertChannelIntoCollection(channel)">
+            <div class="collectionItem"
+                 ng-class="getChannelStatusCss(channel.title)"
+                 ng-repeat="channel in subscriptionList"
+                 ng-click="insertChannelIntoCollection(channel)"
+                 ng-mouseover="setNotLoadedWarning(channel)"
+                 ng-mouseleave="setNotLoadedWarning(channel)">
                 <div class="collectionItemSeperator thumbnailWrapper">
                     <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
                 </div>
@@ -91,7 +99,10 @@
             </div>
         </div>
         <div class='container'>
-            <div class="collectionItem" ng-class="getChannelStatusCss(channel.title)" ng-repeat="channel in collectionItemsList" ng-click="deleteChannelFromCollection(channel)">
+            <div  class="collectionItem"
+                 ng-class="getChannelStatusCss(channel.title)"
+                 ng-repeat="channel in collectionItemsList"
+                 ng-click="deleteChannelFromCollection(channel)">
                 <div class="collectionItemSeperator thumbnailWrapper">
                     <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
                 </div>
@@ -103,6 +114,8 @@
     </div>
     <!--END CHANNELS SECTION-->
 
+
+    <div id="notLoadedWarning" ng-if="isHoveringOnNotLoadedChannel">There are no videos loaded for this channel yet. We are currently fetching video data.</div>
 
 
     <script src="js/constants.js"></script>
