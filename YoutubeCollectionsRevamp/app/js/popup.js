@@ -125,16 +125,6 @@ app.controller('MainCtrl', function ($scope, storage) {
         return thumbnail;
     }
 
-    $scope.getTooltipCss = function (channel) {
-        var cssClass = 'completelyHidden';
-        if (!channel.loaded) {
-            // If the channel isn't loaded, then we actually do need to show the tool tip on hover
-            cssClass = 'tooltiptext';
-        }
-
-        return cssClass;
-    }
-
     $scope.renameCollection = function (collectionName) {
         $scope.oldCollectionName = $scope.selectedCollection.title;
         $scope.newCollectionName = $scope.selectedCollection.title;
