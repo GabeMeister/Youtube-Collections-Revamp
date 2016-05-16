@@ -7,6 +7,7 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     initializeHub();
     initializeScope();
+    updateNotLoadedChannels();
     
 
 
@@ -161,6 +162,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onSubscriptionsInserted', onSubscriptionsInserted);
         _hub.on('onProgressChanged', onProgressChanged);
         _hub.on('onNewSubscriptionsInserted', onNewSubscriptionsInserted);
+        _hub.on('onChannelsToDownloadFetched', onChannelsToDownloadFetched);
 
         _hubConnection.start();
         
@@ -229,6 +231,27 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     function onNewSubscriptionsInserted() {
         // TODO
+
+    }
+
+    function onChannelsToDownloadFetched(message) {
+        // We received a message from the server containing channels that still 
+        // haven't been downloaded yet
+        var channelsNotDownloadedYet = message.YoutubeIds;
+
+        for (var i = 0; i < $scope.subscriptionList.length; i++) {
+            var channel = $scope.subscriptionList[i];
+            
+            // We only mark a channel normal if it is not loaded yet and
+            // the channel isn't in the list returned back from the server
+            // (because that channel list is everything that still isn't downloaded yet)
+            if (channel.loaded === false && channelsNotDownloadedYet.indexOf(channel.id) < 0) {
+                channel.loaded = true;
+                $scope.$apply();
+            }
+        }
+
+
 
     }
 
@@ -310,6 +333,31 @@ app.controller('MainCtrl', function ($scope, storage) {
             result = $scope.selectedCollection.channelItems;
         }
         return result;
+    }
+
+    function getNotLoadedChannels() {
+        var channelsNotLoaded = [];
+
+        for (var i = 0; i < $scope.subscriptionList.length; i++) {
+            var channel = $scope.subscriptionList[i];
+            
+            if (channel.loaded === false) {
+                channelsNotLoaded.push(channel.id);
+            }
+        }
+
+        return channelsNotLoaded;
+    }
+
+    function updateNotLoadedChannels() {
+        if ($scope.extensionState === INITIALIZED) {
+            var channelsNotLoaded = getNotLoadedChannels();
+
+            // We wait a second to make sure the hub has been initialized
+            setTimeout(function () {
+                _hub.invoke('GetChannelsNotDownloaded', channelsNotLoaded);
+            }, 1000);
+        }
     }
 
 
