@@ -291,7 +291,7 @@
 
     /************************* Video Event Handlers *************************/
     function videoEndedEventHandler(e) {
-        if (localStorage.getItem(ARE_COLLECTIONS_ON) === true) {
+        if (localStorage.getItem(ARE_COLLECTIONS_ON) === 'true') {
             var autoplayLink = getAutoplayVideo().find('a').get(0);
             autoplayLink.click();
         }
@@ -309,11 +309,9 @@
             // First record the current video url to local storage as "last played"
             localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
 
-            
-
             // Even though the video hasn't ended yet, we add it to the user's watched video list
             chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO, currentVideoId: currVideoUrl }, function (response) {
-                if (response.success) {
+                if (response.success && response.shouldRemoveVideos === true) {
                     removeRelatedVideos();
                 }
             });

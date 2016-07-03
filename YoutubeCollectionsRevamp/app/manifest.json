@@ -1,6 +1,6 @@
 {
-    "name": "Youtube Collections Playground",
-    "description": "A chrome extension to test youtube collection database interaction",
+    "name": "Youtube Collections Revamp",
+    "description": "A revamp of youtube collections",
     "version": "2.0",
     "permissions": [
         "activeTab",

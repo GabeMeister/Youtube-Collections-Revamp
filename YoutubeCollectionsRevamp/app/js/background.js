@@ -94,7 +94,8 @@ function recordWatchedVideo(currentVideoUrl, responseFunc) {
         }, msToWait);
     }
 
-    responseFunc({ success: connected });
+    var areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
+    responseFunc({ success: connected, shouldRemoveVideos: areRemovingVideos });
     
 }
 
@@ -212,23 +213,25 @@ function changeRelatedVideos(relatedVideoIds) {
 
 /************************* Signalr Response Functions *************************/
 function onRelatedVideosChange(msgObj) {
+
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
+    var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
 
     if (areCollectionsOn) {
         // We change the related videos to the collection videos
         var collectionVideos = msgObj.CollectionVideos;
-        var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
+        
         chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
             chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS, videoData: collectionVideos});
         });
     }
     else {
         // This is just filtering out related videos that the user has already seen
-        var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
-        var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
-        chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
-        });
+        // TODO: figure out this feature later
+        //var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
+        //chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
+        //    chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
+        //});
     }
 
     
