@@ -150,6 +150,12 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.isHoveringOnNotLoadedChannel = !channel.loaded;
     }
 
+    $scope.rescanSubscriptions = function() {
+        // Make call to server
+        _hub.invoke('UpdateSubscriptions', $scope.userYoutubeId);
+
+    }
+
     
 
     /*********************** CLASS FUNCTIONS ***********************/
@@ -161,7 +167,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onChannelIdInserted', onChannelIdInserted);
         _hub.on('onSubscriptionsInserted', onSubscriptionsInserted);
         _hub.on('onProgressChanged', onProgressChanged);
-        _hub.on('onNewSubscriptionsInserted', onNewSubscriptionsInserted);
+        _hub.on('onSubscriptionUpdated', onSubscriptionUpdated);
         _hub.on('onChannelsToDownloadFetched', onChannelsToDownloadFetched);
 
         _hubConnection.start();
@@ -229,9 +235,16 @@ app.controller('MainCtrl', function ($scope, storage) {
         
     }
 
-    function onNewSubscriptionsInserted() {
-        // TODO
+    function onSubscriptionUpdated(subscriptionObj) {
 
+        if (subscriptionObj.Message === 'SubscriptionDelete') {
+            util.filterCollectionById(subscriptionObj.YoutubeIdAffected, $scope.subscriptionList);
+        }
+        else {
+            addSubscription(subscriptionObj);
+        }
+
+        $scope.$apply();
     }
 
     function onChannelsToDownloadFetched(message) {

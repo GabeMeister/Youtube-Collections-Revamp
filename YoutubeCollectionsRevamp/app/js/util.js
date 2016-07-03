@@ -71,6 +71,22 @@ var util = {
         return filteredCollection;
     },
 
+    filterCollectionById: function (channelId, list) {
+        // If the channel's title doesn't match the title passed in, then we
+        // add it into a collection and return it.
+        var filteredCollection = [];
+
+        if (list !== null) {
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].id !== channelId) {
+                    filteredCollection.push(list[i]);
+                }
+            }
+        }
+
+        return filteredCollection;
+    },
+
     doesChannelExist: function(channelTitle, list) {
         var status = false;
 
