@@ -291,8 +291,11 @@
 
     /************************* Video Event Handlers *************************/
     function videoEndedEventHandler(e) {
-        var autoplayLink = getAutoplayVideo().find('a').get(0);
-        autoplayLink.click();
+        if (localStorage.getItem(ARE_COLLECTIONS_ON) === true) {
+            var autoplayLink = getAutoplayVideo().find('a').get(0);
+            autoplayLink.click();
+        }
+        
     }
 
     function videoProgressEventHandler(e) {
