@@ -234,7 +234,7 @@ button:hover {
 
 .collectionsDropdown {
     /*color: black;*/
-    width: 200px;
+    width: 310px;
 }
 
 .collectionsDropdownItem {
@@ -276,13 +276,17 @@ option {
     float: right;
 }
 
+#taskbar3 {
+    float: right;
+}
+
 .youtubeCollectionsCheckbox {
     margin-top: 10px;
     width: 20px;
 }
 
 .newCollectionInput {
-    width: 144px;
+    width: 260px;
 }
 
 .onOffLabel {

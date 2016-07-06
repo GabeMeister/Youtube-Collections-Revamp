@@ -156,7 +156,33 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     }
 
-    
+    $scope.addAthlean = function () {
+        // Add ATHLEAN to subscription list
+        $scope.subscriptionList.push({
+            id: 'UCe0TLA0EsQbE-MjuHXevj2A',
+            title: 'ATHLEAN-X',
+            thumbnail: 'https://yt3.ggpht.com/-tN0EMmN9rXc/AAAAAAAAAAI/AAAAAAAAAAA/KQgPgMaouVA/s240-c-k-no-rj-c0xffffff/photo.jpg',
+            loaded: true
+        });
+
+        sortSubscriptionsList();
+
+        _hub.invoke('AddAthlean');
+    }
+
+    $scope.removeAthlean = function () {
+        var athleanId = 'UCe0TLA0EsQbE-MjuHXevj2A';
+
+        // Remove ATHLEAN from subscription list
+        $scope.subscriptionList = util.filterChannelIdFromList(athleanId, $scope.subscriptionList);
+
+        // Remove ATHLEAN from any possible collections
+        for (var i = 0; i < $scope.collectionsList.length; i++) {
+            util.filterChannelIdFromCollection(athleanId, $scope.collectionsList[i]);
+        }
+
+        _hub.invoke('DeleteAthlean');
+    }
 
     /*********************** CLASS FUNCTIONS ***********************/
 
@@ -238,7 +264,15 @@ app.controller('MainCtrl', function ($scope, storage) {
     function onSubscriptionUpdated(subscriptionObj) {
 
         if (subscriptionObj.Message === 'SubscriptionDelete') {
-            util.filterCollectionById(subscriptionObj.YoutubeIdAffected, $scope.subscriptionList);
+            // Remove subscription from any collections
+            var deletedYoutubeId = subscriptionObj.YoutubeIdAffected;
+
+            for (var i = 0; i < $scope.collectionsList.length; i++) {
+                var collection = $scope.collectionsList[i];
+                collection.channelItems = util.filterChannelIdFromList(deletedYoutubeId, collection.channelItems);
+            }
+
+            $scope.subscriptionList = util.filterChannelIdFromList(deletedYoutubeId, $scope.subscriptionList);
         }
         else {
             addSubscription(subscriptionObj);
