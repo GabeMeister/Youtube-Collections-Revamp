@@ -2,15 +2,12 @@
 app.controller('MainCtrl', function ($scope, storage) {
     var _hub = null;
     var _hubConnection = null;
-
-
-
-    initializeHub();
-    initializeScope();
-    updateNotLoadedChannels();
+    var _isConnected = false;
     
 
-
+    initializeScope();
+    initializeHub();
+    
 
     /*********************** SCOPE ***********************/
     $scope.$watch('selectedCollection', function () {
@@ -196,8 +193,25 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onSubscriptionUpdated', onSubscriptionUpdated);
         _hub.on('onChannelsToDownloadFetched', onChannelsToDownloadFetched);
         _hub.on('onChannelVideosInserted', onChannelVideosInserted);
+        
+        _hubConnection.start()
+            .done(function () {
+                console.log('SignalR Connected!');
+                $scope.extensionState = INITIALIZED;
+                _isConnected = true;
+                $scope.$apply();
 
-        _hubConnection.start();
+                // Get any channels that don't have videos loaded
+                // Send list to hub to respond with any channels that have recently had videos loaded
+                _hub.invoke('GetChannelsWithVideosInserted', getNotLoadedChannels());
+            
+            })
+            .fail(function() {
+                console.log('SignalR Failed to Connect!');
+                $scope.extensionState = FAILED_CONNECTION;
+                _isConnected = false;
+                $scope.$apply();
+            });
     }
 
     function initializeScope() {
@@ -221,12 +235,6 @@ app.controller('MainCtrl', function ($scope, storage) {
 
         $scope.isHoveringOnNotLoadedChannel = false;
 
-        setTimeout(function () {
-            // Get any channels that don't have videos loaded
-            // Send list to hub to respond with any channels that have recently had videos loaded
-            _hub.invoke('GetChannelsWithVideosInserted', getNotLoadedChannels());
-
-        }, 1000);
     }
 
     function clearScope() {

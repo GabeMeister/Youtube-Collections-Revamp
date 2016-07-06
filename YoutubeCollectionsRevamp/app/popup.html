@@ -51,6 +51,12 @@
         <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
     </div>
 </div>
+
+<div id="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
+    <div>
+        <p>Connecting to Server...</p>
+    </div>
+</div>
 <!--END OVERLAY MESSAGES SECTION-->
 
 
