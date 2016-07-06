@@ -195,9 +195,9 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onProgressChanged', onProgressChanged);
         _hub.on('onSubscriptionUpdated', onSubscriptionUpdated);
         _hub.on('onChannelsToDownloadFetched', onChannelsToDownloadFetched);
+        _hub.on('onChannelVideosInserted', onChannelVideosInserted);
 
         _hubConnection.start();
-        
     }
 
     function initializeScope() {
@@ -220,6 +220,13 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.collectionItemsList = [];
 
         $scope.isHoveringOnNotLoadedChannel = false;
+
+        setTimeout(function () {
+            // Get any channels that don't have videos loaded
+            // Send list to hub to respond with any channels that have recently had videos loaded
+            _hub.invoke('GetChannelsWithVideosInserted', getNotLoadedChannels());
+
+        }, 1000);
     }
 
     function clearScope() {
@@ -321,6 +328,20 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     }
 
+    function onChannelVideosInserted(msgObj) {
+        var loadedChannelId = msgObj.ChannelId;
+        
+        for (var i = 0; i < $scope.subscriptionList.length; i++) {
+            if ($scope.subscriptionList[i].id === loadedChannelId) {
+                $scope.subscriptionList[i].loaded = true;
+                break;
+            }
+        }
+
+        $scope.$apply();
+    }
+
+    /*********************** HELPER FUNCTIONS ***********************/
     function convertToLocalStorageChannel(channel) {
 
         return {
