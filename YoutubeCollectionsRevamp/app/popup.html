@@ -62,18 +62,19 @@
     <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn"/><span class="onOffLabel">Enable Youtube Collections</span></label>
 </div>
 <div class="taskbar" id="taskbar2">
-    <button ng-click="restartInitialization()">Restart</button>
-    <button ng-click="restartCollectionItems()">Reset Collections</button>
-    <button ng-click="addAthlean()">Add ATHLEAN</button>
-    <button ng-click="removeAthlean()">Remove ATHLEAN</button>
+    <!--<button ng-click="restartInitialization()">Restart</button>-->
+    <!--<button ng-click="restartCollectionItems()">Reset Collections</button>-->
+    <!--<button ng-click="addAthlean()">Add ATHLEAN</button>-->
+    <!--<button ng-click="removeAthlean()">Remove ATHLEAN</button>-->
     <button ng-click="rescanSubscriptions()">Re-scan Subscriptions</button>
     <button ng-click="renameCollection()" class="inline-button">Rename</button>
-</div>
-<div class="taskbar" id="taskbar3">
     <input class="newCollectionInput" type="text" ng-model="newCollectionTitle" />
     <button ng-click="insertCollection()">
         Add
     </button>
+</div>
+<div class="taskbar" id="taskbar4">
+    <input type="text" class="searchbar" placeholder="Search Subscriptions" ng-model="searchText.title"/>
     <select class="collectionsDropdown"
             ng-model="selectedCollection"
             ng-options="selectedCollection.title for selectedCollection in collectionsList">
@@ -89,11 +90,11 @@
 <div class='wrapper'>
     <div class='container'>
         <div class="collectionItem"
-                ng-class="getChannelStatusCss(channel.title)"
-                ng-repeat="channel in subscriptionList"
-                ng-click="insertChannelIntoCollection(channel)"
-                ng-mouseover="setNotLoadedWarning(channel)"
-                ng-mouseleave="setNotLoadedWarning(channel)">
+             ng-class="getChannelStatusCss(channel.title)"
+             ng-repeat="channel in subscriptionList | filter:searchText"
+             ng-click="insertChannelIntoCollection(channel)"
+             ng-mouseover="setNotLoadedWarning(channel)"
+             ng-mouseleave="setNotLoadedWarning(channel)">
             <div class="collectionItemSeperator thumbnailWrapper">
                 <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
             </div>

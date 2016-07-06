@@ -171,7 +171,7 @@ button:hover {
 .wrapper {
     display: table;
     overflow: auto;
-    height: 400px;
+    height: 300px;
     width: 650px;
     max-height: 425px;
 }
@@ -234,7 +234,7 @@ button:hover {
 
 .collectionsDropdown {
     /*color: black;*/
-    width: 310px;
+    width: 320px;
 }
 
 .collectionsDropdownItem {
@@ -277,6 +277,10 @@ option {
 }
 
 #taskbar3 {
+    float: right;
+}
+
+#taskbar4 {
     float: right;
 }
 
@@ -361,4 +365,8 @@ option {
     background-color: rgba(220, 37, 19, 0.76);
     padding: 10px;
     border-radius: 4px;
+}
+
+.searchbar {
+    width: 315px;
 }
