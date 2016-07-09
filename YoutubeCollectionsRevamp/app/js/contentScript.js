@@ -291,13 +291,14 @@
 
     /************************* Video Event Handlers *************************/
     function videoEndedEventHandler(e) {
-        if (localStorage.getItem(ARE_COLLECTIONS_ON) === 'true') {
-            var autoplayLink = getAutoplayVideo().find('a').get(0);
-            autoplayLink.click();
-        }
-        
+        chrome.runtime.sendMessage({ message: 'ARE_COLLECTIONS_ON' }, function(response) {
+            if (response.areCollectionsOn) {
+                var autoplayLink = getAutoplayVideo().find('a').get(0);
+                autoplayLink.click();
+            }
+        });
     }
-
+    
     function videoProgressEventHandler(e) {
         // When a video starts we remove related videos that the user has already seen
         // We use the progress event because the start event doesn't always get fired

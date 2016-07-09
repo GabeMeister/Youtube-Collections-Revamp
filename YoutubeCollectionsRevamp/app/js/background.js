@@ -42,6 +42,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        getYoutubeTabUrl(sender.tab.id);
 	        break;
 
+	    case ARE_COLLECTIONS_ON:
+	        var isOn = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
+	        sendResponse({ areCollectionsOn: isOn });
+            break;
+
 	}
 });
 
