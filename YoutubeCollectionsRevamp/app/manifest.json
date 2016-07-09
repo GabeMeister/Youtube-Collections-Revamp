@@ -9,7 +9,8 @@
         "webNavigation",
         "contextMenus",
         "http://localhost:5507/*",
-        "http://localhost:3851/*"
+        "http://localhost:3851/*",
+        "https://youtubecollectionsrevampserver.azurewebsites.net/*"
     ],
     "browser_action": {
         "default_icon": "images/icon.png",

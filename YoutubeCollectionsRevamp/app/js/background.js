@@ -1,7 +1,6 @@
 var queryInfo = {
 	active: true
 }
-var ytCollectionsUrl = 'http://localhost:5507/';
 
 var _hub = null;
 var _hubConnection = null;

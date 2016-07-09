@@ -197,7 +197,11 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hubConnection.start()
             .done(function () {
                 console.log('SignalR Connected!');
-                $scope.extensionState = INITIALIZED;
+
+                if ($scope.extensionState === FAILED_CONNECTION) {
+                    $scope.extensionState = INITIALIZED;
+                }
+                
                 _isConnected = true;
                 $scope.$apply();
 
