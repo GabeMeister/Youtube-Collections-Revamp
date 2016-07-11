@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 	    case NOTIFY_CHANNEL_ID_FOUND_MSG:
 	        localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
-	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
+	        _hub.invoke('InsertNewYoutubeChannelId', request.channelId);
 	        break;
 
 	    case NOTIFY_CHANNEL_ID_NOT_FOUND_MSG:
@@ -165,6 +165,8 @@ function initializeHub() {
     _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
     _hub.on('onRelatedVideosChange', onRelatedVideosChange);
     _hub.on('onWatchedVideoInserted', onWatchedVideoInserted);
+    _hub.on('onYoutubeIdAlreadyExists', onYoutubeIdAlreadyExists);
+    _hub.on('onNewYoutubeIdInserted', onNewYoutubeIdInserted);
 
     _hubConnection.start()
     .done(function () {
@@ -256,3 +258,10 @@ function onWatchedVideoInserted(msgObj) {
 }
 
 
+function onYoutubeIdAlreadyExists() {
+    localStorage.setItem(EXTENSION_STATE, util.quotify(EXISTING_CHANNEL_ID_FOUND));
+}
+
+function onNewYoutubeIdInserted() {
+    localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
+}

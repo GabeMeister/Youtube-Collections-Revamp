@@ -1,6 +1,6 @@
 ﻿// General Constants
-//var HUB_SERVER_URL = 'http://localhost:3851';
-var HUB_SERVER_URL = 'https://youtubecollectionsrevampserver.azurewebsites.net/signalr';
+var HUB_SERVER_URL = 'http://localhost:3851';
+//var HUB_SERVER_URL = 'https://youtubecollectionsrevampserver.azurewebsites.net/signalr';
 
 
 // Chrome Runtime Messages
@@ -40,6 +40,7 @@ var CONNECTED_WITH_SERVER = 'CONNECTED_WITH_SERVER';
 // Extension States
 var FETCHING_YOUTUBE_CHANNEL_ID = 'FETCHING_YOUTUBE_CHANNEL_ID';
 var CHANNEL_ID_FOUND = 'CHANNEL_ID_FOUND';
+var EXISTING_CHANNEL_ID_FOUND = 'EXISTING_CHANNEL_ID_FOUND';
 var CHANNEL_ID_NOT_FOUND = 'CHANNEL_ID_NOT_FOUND';
 var FETCHING_SUBSCRIPTIONS = 'FETCHING_SUBSCRIPTIONS';
 var INITIALIZED = 'INITIALIZED';

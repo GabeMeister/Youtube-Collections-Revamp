@@ -1,14 +1,13 @@
 {
     "name": "Youtube Collections Revamp",
     "description": "A revamp of youtube collections",
-    "version": "2.0",
+    "version": "0.1",
     "permissions": [
         "activeTab",
         "storage",
         "tabs",
         "webNavigation",
         "contextMenus",
-        "http://localhost:5507/*",
         "http://localhost:3851/*",
         "https://youtubecollectionsrevampserver.azurewebsites.net/*"
     ],

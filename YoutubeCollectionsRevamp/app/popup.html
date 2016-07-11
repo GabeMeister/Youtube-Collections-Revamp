@@ -1,146 +1,144 @@
 <!doctype html>
 <html ng-app="youtube-collections-revamp">
 <head>
-<title>Youtube Collections Revamp</title>
-<link href="css/popup.css" rel="stylesheet" type="text/css" />
+    <title>Youtube Collections Revamp</title>
+    <link href="css/popup.css" rel="stylesheet" type="text/css" />
 </head>
 <body ng-controller="MainCtrl">
 
-<!--OVERLAY MESSAGES SECTION-->
-<div id="overlay" ng-if="extensionState===null||extensionState==='undefined'||extensionState===''">
-    <div>
-        <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
-        <button ng-click="fetchYoutubeChannelId()">Got it!</button>
+    <!--OVERLAY MESSAGES SECTION-->
+    <div id="overlay" ng-if="extensionState===null||extensionState==='undefined'||extensionState===''">
+        <div>
+            <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
+            <button ng-click="fetchYoutubeChannelId()">Got it!</button>
+        </div>
     </div>
-</div>
 
 
-<div id="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
-    <div>
-        <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
+    <div id="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
+        <div>
+            <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
+        </div>
     </div>
-</div>
-
-
-<div id="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
-    <div>
-        <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
-        <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
-    </div>
-</div>
-
-<div id="overlay" ng-if="extensionState==='CHANNEL_ID_NOT_FOUND'">
-    <div>
-        <p>Your channel id wasn't found. Log into YouTube and try again. </p>
-        <button ng-click="fetchYoutubeChannelId()">Try again!</button>
-    </div>
-</div>
 
     
-<div id="overlay" ng-if="extensionState==='FETCHING_SUBSCRIPTIONS'">
-    <div>
-        <p>{{displayMessage}}</p>
+    <div id="overlay" ng-if="extensionState==='EXISTING_CHANNEL_ID_FOUND'">
+        <div>
+            <p>Your YouTube channel already exists in the database! We will now sync your data to this machine.</p>
+            <button ng-click="syncUserWithDatabase()">Do it!</button>
+        </div>
     </div>
-</div>
+
+    <div id="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
+        <div>
+            <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
+            <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
+        </div>
+    </div>
+
+    <div id="overlay" ng-if="extensionState==='CHANNEL_ID_NOT_FOUND'">
+        <div>
+            <p>Your channel id wasn't found. Log into YouTube and try again. </p>
+            <button ng-click="fetchYoutubeChannelId()">Try again!</button>
+        </div>
+    </div>
 
 
-<div id="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
-    <div>
-        <p>Enter new collection name:</p>
-        <input ng-model="newCollectionName"/>
-        <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+    <div id="overlay" ng-if="extensionState==='FETCHING_SUBSCRIPTIONS'">
+        <div>
+            <p>{{displayMessage}}</p>
+        </div>
     </div>
-</div>
 
-<div id="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
-    <div>
-        <p>Connecting to Server...</p>
+
+    <div id="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
+        <div>
+            <p>Enter new collection name:</p>
+            <input ng-model="newCollectionName" />
+            <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+        </div>
     </div>
-</div>
+
+    <div id="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
+        <div>
+            <p>Connecting to Server...</p>
+        </div>
+    </div>
+
+
 <!--END OVERLAY MESSAGES SECTION-->
-
-
-
-
-
-<!--TASK BAR SECTION-->
-<div class="taskbar" id="taskbar1">
-    <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn"/><span class="onOffLabel">Enable Youtube Collections</span></label>
-</div>
-<div class="taskbar" id="taskbar2">
-    <!--<button ng-click="restartInitialization()">Restart</button>-->
-    <!--<button ng-click="restartCollectionItems()">Reset Collections</button>-->
-    <!--<button ng-click="addAthlean()">Add ATHLEAN</button>-->
-    <!--<button ng-click="removeAthlean()">Remove ATHLEAN</button>-->
-    <button ng-click="rescanSubscriptions()">Re-scan Subscriptions</button>
-    <button ng-click="renameCollection()" class="inline-button">Rename</button>
-    <input class="newCollectionInput" type="text" ng-model="newCollectionTitle" />
-    <button ng-click="insertCollection()">
-        Add
-    </button>
-</div>
-<div class="taskbar" id="taskbar4">
-    <input type="text" class="searchbar" placeholder="Search Subscriptions" ng-model="searchText.title"/>
-    <select class="collectionsDropdown"
-            ng-model="selectedCollection"
-            ng-options="selectedCollection.title for selectedCollection in collectionsList">
-        <option value=""></option>
-    </select>
-</div>
-<!--END TASK BAR SECTION-->
-
-
-
-
-<!--CHANNELS SECTION-->
-<div class='wrapper'>
-    <div class='container'>
-        <div class="collectionItem"
-             ng-class="getChannelStatusCss(channel.title)"
-             ng-repeat="channel in subscriptionList | filter:searchText"
-             ng-click="insertChannelIntoCollection(channel)"
-             ng-mouseover="setNotLoadedWarning(channel)"
-             ng-mouseleave="setNotLoadedWarning(channel)">
-            <div class="collectionItemSeperator thumbnailWrapper">
-                <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
+    <!--TASK BAR SECTION-->
+    <div class="taskbar" id="taskbar1">
+        <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn" /><span class="onOffLabel">Enable Youtube Collections</span></label>
+    </div>
+    <div class="taskbar" id="taskbar2">
+        <!--<button ng-click="restartInitialization()">Restart</button>-->
+        <!--<button ng-click="restartCollectionItems()">Reset Collections</button>-->
+        <!--<button ng-click="addAthlean()">Add ATHLEAN</button>-->
+        <!--<button ng-click="removeAthlean()">Remove ATHLEAN</button>-->
+        <button ng-click="rescanSubscriptions()">Re-scan Subscriptions</button>
+        <button ng-click="renameCollection()" class="inline-button">Rename</button>
+        <input class="newCollectionInput" type="text" ng-model="newCollectionTitle" />
+        <button ng-click="insertCollection()">Add</button>
+    </div>
+    <div class="taskbar" id="taskbar4">
+        <input type="text" class="searchbar" placeholder="Search Subscriptions" ng-model="searchText.title" />
+        <select class="collectionsDropdown"
+                ng-model="selectedCollection"
+                ng-options="selectedCollection.title for selectedCollection in collectionsList">
+            <option value=""></option>
+        </select>
+    </div>
+    <!--END TASK BAR SECTION-->
+    <!--CHANNELS SECTION-->
+    <div class='wrapper'>
+        <div class='container'>
+            <div class="collectionItem"
+                 ng-class="getChannelStatusCss(channel.title)"
+                 ng-repeat="channel in subscriptionList | filter:searchText"
+                 ng-click="insertChannelIntoCollection(channel)"
+                 ng-mouseover="setNotLoadedWarning(channel)"
+                 ng-mouseleave="setNotLoadedWarning(channel)">
+                <div class="collectionItemSeperator thumbnailWrapper">
+                    <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
+                </div>
+                <div class="collectionItemSeperator titleWrapper">
+                    <span ng-bind="channel.title" class="collectionItemTitle"></span>
+                </div>
             </div>
-            <div class="collectionItemSeperator titleWrapper">
-                <span ng-bind="channel.title" class="collectionItemTitle"></span>
+        </div>
+        <div class='container'>
+            <div class="collectionItem"
+                 ng-class="getChannelStatusCss(channel.title)"
+                 ng-repeat="channel in collectionItemsList"
+                 ng-click="deleteChannelFromCollection(channel)">
+                <div class="collectionItemSeperator thumbnailWrapper">
+                    <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
+                </div>
+                <div class="collectionItemSeperator titleWrapper">
+                    <span ng-bind="channel.title" class="collectionItemTitle"></span>
+                </div>
             </div>
         </div>
     </div>
-    <div class='container'>
-        <div  class="collectionItem"
-                ng-class="getChannelStatusCss(channel.title)"
-                ng-repeat="channel in collectionItemsList"
-                ng-click="deleteChannelFromCollection(channel)">
-            <div class="collectionItemSeperator thumbnailWrapper">
-                <img ng-src="{{getChannelThumbnail(channel)}}" class="channelThumbnail" />
-            </div>
-            <div class="collectionItemSeperator titleWrapper">
-                <span ng-bind="channel.title" class="collectionItemTitle"></span>
-            </div>
-        </div>
-    </div>
-</div>
-<!--END CHANNELS SECTION-->
+    <!--END CHANNELS SECTION-->
 
 
-<div id="notLoadedWarning" ng-if="isHoveringOnNotLoadedChannel">There are no videos loaded for this channel yet. We are currently fetching video data.</div>
+    <div id="notLoadedWarning" ng-if="isHoveringOnNotLoadedChannel">There are no videos loaded for this channel yet. We are currently fetching video data.</div>
 
 
-<script src="js/constants.js"></script>
-<script src="js/util.js"></script>
-<script src="js/jquery.js"></script>
-<script src="js/jquery.signalR-2.2.0.js"></script>
-<script src="js/angular1.4.7.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.signalR-2.2.0.js"></script>
+    <script src="js/angular1.4.7.js"></script>
 
-<script src="js/app.js"></script>
-<script src="js/angular-cookies.js"></script>
-<script src="js/angularLocalStorage.js"></script>
-<script src="js/popup.js"></script>
-<script src="js/popup-signalr.js"></script>
-<script src="js/popup-messenger.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/angular-cookies.js"></script>
+    <script src="js/angularLocalStorage.js"></script>
+    <script src="js/popup.js"></script>
+    <script src="js/popup-signalr.js"></script>
+    <script src="js/popup-messenger.js"></script>
 </body>
 </html>
 

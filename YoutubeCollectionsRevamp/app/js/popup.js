@@ -1,4 +1,3 @@
-
 app.controller('MainCtrl', function ($scope, storage) {
     var _hub = null;
     var _hubConnection = null;
@@ -31,14 +30,17 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     }
 
+    $scope.syncUserWithDatabase = function() {
+        console.log('Syncing with database');
+    }
+
     $scope.fetchYoutubeSubscriptions = function () {
         
         $scope.extensionState = FETCHING_SUBSCRIPTIONS;
         
-        // Kinda subtle, but we insert the youtube id, and THEN in the signalr callback we actually
-        // start fetching the subscriptions
-        $scope.displayMessage = 'Inserting channel id...';
-        _hub.invoke('InsertYoutubeId', $scope.userYoutubeId);
+        // Completed inserting channel id, now fetch all subscriptions
+        $scope.displayMessage = 'Fetching channel subscriptions...';
+        _hub.invoke('FetchAndInsertChannelSubscriptions', $scope.userYoutubeId);
 
     }
 
@@ -187,7 +189,6 @@ app.controller('MainCtrl', function ($scope, storage) {
         
         _hubConnection = $.hubConnection(HUB_SERVER_URL);
         _hub = _hubConnection.createHubProxy('YoutubeCollectionsServer');
-        _hub.on('onChannelIdInserted', onChannelIdInserted);
         _hub.on('onSubscriptionsInserted', onSubscriptionsInserted);
         _hub.on('onProgressChanged', onProgressChanged);
         _hub.on('onSubscriptionUpdated', onSubscriptionUpdated);
@@ -256,15 +257,6 @@ app.controller('MainCtrl', function ($scope, storage) {
 
 
     /*********************** SIGNALR ***********************/
-    function onChannelIdInserted() {
-
-        // Completed inserting channel id, now fetch all subscriptions
-        $scope.displayMessage = 'Fetching channel subscriptions...';
-        $scope.$apply();
-        _hub.invoke('FetchAndInsertChannelSubscriptions', $scope.userYoutubeId);
-
-    }
-
     function onSubscriptionsInserted() {
 
         // Completed inserting subscription id
@@ -429,16 +421,6 @@ app.controller('MainCtrl', function ($scope, storage) {
         return channelsNotLoaded;
     }
 
-    function updateNotLoadedChannels() {
-        if ($scope.extensionState === INITIALIZED) {
-            var channelsNotLoaded = getNotLoadedChannels();
-
-            // We wait a second to make sure the hub has been initialized
-            setTimeout(function () {
-                _hub.invoke('GetChannelsNotDownloaded', channelsNotLoaded);
-            }, 1000);
-        }
-    }
 
 
     /*********************** CHROME EXTENSION ***********************/
