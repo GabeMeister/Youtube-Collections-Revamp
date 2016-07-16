@@ -31,7 +31,9 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     $scope.syncUserWithDatabase = function() {
-        console.log('Syncing with database');
+
+
+        
     }
 
     $scope.fetchYoutubeSubscriptions = function () {
@@ -154,7 +156,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.invoke('UpdateSubscriptions', $scope.userYoutubeId);
 
     }
-
+    
     $scope.addAthlean = function () {
         // Add ATHLEAN to subscription list
         $scope.subscriptionList.push({

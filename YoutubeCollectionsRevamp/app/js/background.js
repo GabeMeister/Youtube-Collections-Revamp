@@ -1,14 +1,18 @@
+// ************* Initialize *************
 var queryInfo = {
 	active: true
 }
 
 var _hub = null;
 var _hubConnection = null;
+var YOUTUBE_BROWSER_KEY = 'AIzaSyC9uXxwF4PxYilaOvPTDLdXAnToBwFvXcs';
 
 initialize();
 initializeHub();
 
 
+
+// ************* Chrome API *************
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 	switch (request.message) {
@@ -18,12 +22,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        break;
 
 	    case NOTIFY_CHANNEL_ID_FOUND_MSG:
-	        localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
-	        _hub.invoke('InsertNewYoutubeChannelId', request.channelId);
+	        handleChannelIdFound(request);
 	        break;
 
 	    case NOTIFY_CHANNEL_ID_NOT_FOUND_MSG:
-            localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_NOT_FOUND))
+	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_NOT_FOUND));
 	        break;
 
 	    case RECORD_WATCHED_VIDEO:
@@ -76,6 +79,9 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
+
+
+// ************* Background Script Functions *************
 function recordWatchedVideo(currentVideoUrl, responseFunc) {
     var connected = localStorage.getItem(CONNECTED_WITH_SERVER) === "true";
 
@@ -216,6 +222,35 @@ function changeRelatedVideos(relatedVideoIds) {
     
 }
 
+function handleChannelIdFound(request) {
+    $.ajax({
+        url: 'https://www.googleapis.com/youtube/v3/subscriptions',
+        data: {
+            part: "snippet",
+            channelId: request.channelId,
+            key: YOUTUBE_BROWSER_KEY
+        },
+        success: function(data) {
+            localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
+            _hub.invoke('InsertNewYoutubeChannelId', request.channelId);
+        },
+        error: function (data) {
+            var jsonResponse = JSON.parse(data.responseText);
+            var errorMessage = jsonResponse.error.errors[0].reason;
+
+            if (errorMessage === 'subscriberNotFound') {
+                localStorage.setItem(EXTENSION_STATE, CHANNEL_ID_DOES_NOT_EXIST);
+            }
+            else if (errorMessage === 'subscriptionForbidden') {
+                localStorage.setItem(EXTENSION_STATE, SUBSCRIPTIONS_NOT_PUBLIC);
+            }
+            
+        }
+    });
+
+}
+
+
 
 /************************* Signalr Response Functions *************************/
 function onRelatedVideosChange(msgObj) {
@@ -256,7 +291,6 @@ function onWatchedVideoInserted(msgObj) {
         chrome.tabs.sendMessage(tabs[0].id, { message: BEGIN_REMOVING_RELATED_VIDEOS });
     });
 }
-
 
 function onYoutubeIdAlreadyExists() {
     localStorage.setItem(EXTENSION_STATE, util.quotify(EXISTING_CHANNEL_ID_FOUND));

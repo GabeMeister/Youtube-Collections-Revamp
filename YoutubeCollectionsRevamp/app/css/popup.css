@@ -241,7 +241,7 @@ button:hover {
     font-size: 18px;
 }
 
-#overlay {
+.overlay {
     visibility: visible;
     position: absolute;
     left: 0px;
@@ -252,7 +252,7 @@ button:hover {
     z-index: 1000;
 }
 
-#overlay div {
+.overlay div {
     color: black;
     width: 300px;
     margin: 50px auto;
