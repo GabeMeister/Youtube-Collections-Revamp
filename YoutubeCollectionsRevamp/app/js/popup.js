@@ -135,10 +135,13 @@ app.controller('MainCtrl', function ($scope, storage) {
         return thumbnail;
     }
 
-    $scope.renameCollection = function (collectionName) {
-        $scope.oldCollectionName = $scope.selectedCollection.title;
-        $scope.newCollectionName = $scope.selectedCollection.title;
-        $scope.extensionState = RENAMING_COLLECTION;
+    $scope.renameCollection = function () {
+        if ($scope.selectedCollection !== null) {
+            $scope.oldCollectionName = $scope.selectedCollection.title;
+            $scope.newCollectionName = $scope.selectedCollection.title;
+            $scope.extensionState = RENAMING_COLLECTION;
+        }
+        
     }
 
     $scope.confirmCollectionRename = function (newCollectionName) {
@@ -153,6 +156,29 @@ app.controller('MainCtrl', function ($scope, storage) {
         
     }
 
+    $scope.deleteCollection = function() {
+        if ($scope.selectedCollection !== null) {
+            $scope.extensionState = DELETING_COLLECTION;
+        }
+    }
+
+    $scope.confirmCollectionDelete = function() {
+        
+        // The user wants to delete the selected collection
+        _hub.invoke('DeleteCollection', $scope.selectedCollection.title, $scope.userYoutubeId);
+
+        var index = $scope.collectionsList.indexOf($scope.selectedCollection);
+        $scope.collectionsList.splice(index, 1);
+        $scope.selectedCollection = null;
+
+        $scope.extensionState = INITIALIZED;
+
+    }
+
+    $scope.cancelCollectionDelete = function () {
+        $scope.extensionState = INITIALIZED;
+    }
+
     $scope.setNotLoadedWarning = function (channel) {
         // If channel's loaded, then no warning. 
         // If channel's not loaded, then yes, we want the warning to show
@@ -161,7 +187,7 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     $scope.rescanSubscriptions = function () {
 
-        $scope.displayMessage = 'Fetching new subscriptions...';
+        $scope.displayMessage = 'Updating subscriptions...';
         $scope.extensionState = FETCHING_SUBSCRIPTIONS;
 
         _hub.invoke('UpdateSubscriptions', $scope.userYoutubeId);
@@ -244,7 +270,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         storage.bind($scope, 'displayMessage', { defaultValue: '', storeName: DISPLAY_MESSAGE });
         storage.bind($scope, 'userYoutubeId', { defaultValue: '', storeName: USER_YOUTUBE_ID });
         storage.bind($scope, 'extensionState', { defaultValue: '', storeName: EXTENSION_STATE });
-        storage.bind($scope, 'areCollectionsOn', { defaultValue: false, storeName: ARE_COLLECTIONS_ON });
+        storage.bind($scope, 'areCollectionsOn', { defaultValue: true, storeName: ARE_COLLECTIONS_ON });
         
         // The selected collection needs to be an exact reference to an item in the collections list
         // If you store an item to local storage and then retrieve it from local storage, it's a different
@@ -364,6 +390,7 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     function onSubscriptionsUpdated() {
         $scope.extensionState = INITIALIZED;
+        $scope.$apply();
     }
 
     function onCollectionSync(msgObj) {

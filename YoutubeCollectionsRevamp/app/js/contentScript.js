@@ -15,15 +15,7 @@
             case REMOVE_VIDEO:
                 removeVideo(request.videoId);
                 break;
-
-            case BEGIN_REMOVING_RELATED_VIDEOS:
-                beginRemovingRelatedVideos();
-                break;
-
-            case UPDATE_RELATED_VIDEOS:
-                updateRelatedVideos(request.unseenVideoIds);
-                break;
-
+                
             case UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS:
                 updateRelatedVideosWithCollectionVideos(request.videoData);
                 break;
@@ -180,23 +172,6 @@
     }
 
     /************************* Signalr Response Functions *************************/
-    function updateRelatedVideos(unseenVideos) {
-        var lastElement = getLastItemRelatedVideosList();
-
-        for (var i = 0; i < _relatedVideosList.length; i++) {
-            var videoId = getYoutubeIdFromRelatedVideo(_relatedVideosList[i]);
-
-            // If the video isn't in the unseen list, then we add it back
-            // because the user might want to see it
-            if (unseenVideos.indexOf(videoId) !== -1) {
-                lastElement.before(_relatedVideosList[i]);
-            }
-            
-        }
-
-        ensureAutoplayVideoIsPresent();
-    }
-
     function updateRelatedVideosWithCollectionVideos(videoData) {
 
         // Handle filling in the auto-play video
@@ -270,14 +245,7 @@
         }
         
     }
-
-    function beginRemovingRelatedVideos() {
-        var relatedVideoIds = getRelatedVideoIdsFromCache();
-        var currentVideoUrlBeingWatched = util.unquotify(localStorage.getItem(LAST_PLAYED_VIDEO_URL));
-
-        chrome.runtime.sendMessage({ message: CHANGE_RELATED_VIDEOS, videoIds: relatedVideoIds, currentVideoId: currentVideoUrlBeingWatched });
-    }
-
+    
     function ensureAutoplayVideoIsPresent()
     {
         var autoPlayVideo = getAutoplayVideo();
@@ -302,13 +270,13 @@
     function videoProgressEventHandler(e) {
         // When a video starts we remove related videos that the user has already seen
         // We use the progress event because the start event doesn't always get fired
+        var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO);
         var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
-        var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO_URL);
-
+        
         if (util.quotify(currVideoUrl) !== lastPlayedVideoUrl) {
             // This is a new video the user has browsed to, we need to change the related videos
             // First record the current video url to local storage as "last played"
-            localStorage.setItem(LAST_PLAYED_VIDEO_URL, util.quotify(currVideoUrl));
+            localStorage.setItem(LAST_PLAYED_VIDEO, util.quotify(currVideoUrl));
 
             // Even though the video hasn't ended yet, we add it to the user's watched video list
             chrome.runtime.sendMessage({ message: RECORD_WATCHED_VIDEO, currentVideoId: currVideoUrl }, function (response) {

@@ -1,7 +1,7 @@
 {
     "name": "Youtube Collections Revamp",
-    "description": "A revamp of youtube collections",
-    "version": "0.1",
+    "description": "A revamp of YouTube Collections",
+    "version": "2.3",
     "permissions": [
         "activeTab",
         "storage",
@@ -14,7 +14,7 @@
     "browser_action": {
         "default_icon": "images/icon.png",
         "default_popup": "popup.html",
-        "default_title": "Playground"
+        "default_title": "YouTube Collections Revamp"
     },
     "web_accessible_resources": [
         "images/*.png"

@@ -1,2 +1,2 @@
 # Youtube-Collections-Revamp
-A revamp of YouTube collections, except in a chrome extension.
+A revamp of YouTube Collections, except in a Chrome extension.

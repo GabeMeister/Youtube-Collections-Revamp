@@ -74,16 +74,24 @@
     </div>
 
 
-    <div class="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
+<div class="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
+    <div>
+        <p>Enter new collection name:</p>
+        <input ng-model="newCollectionName"/>
+        <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+    </div>
+</div>
+
+    <div class="overlay" ng-if="extensionState==='DELETING_COLLECTION'">
         <div>
-            <p>Enter new collection name:</p>
-            <input ng-model="newCollectionName" />
-            <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+            <p>Are you sure you want to delete '{{selectedCollection.title}}'?</p>
+            <button ng-click="confirmCollectionDelete(newCollectionName)">Yup</button>
+            <button ng-click="cancelCollectionDelete()">Nope</button>
         </div>
     </div>
 
 
-    <div class="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
+<div class="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
         <div>
             <p>Connecting to Server...</p>
         </div>

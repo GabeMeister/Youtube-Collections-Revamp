@@ -35,11 +35,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
 	        recordWatchedVideo(request.currentVideoId, sendResponse);
 	        break;
-
-	    case CHANGE_RELATED_VIDEOS:
-	        changeRelatedVideos(request.videoIds);
-	        break;
-
+            
 	    case GET_CURRENT_YOUTUBE_URL:
 	        getYoutubeTabUrl(sender.tab.id);
 	        break;
@@ -69,7 +65,7 @@ chrome.webNavigation.onCompleted.addListener(function (details) {
 
 chrome.runtime.onInstalled.addListener(function () {
     var context = "link";
-    var title = "Mark video as watched";
+    var title = "Mark video as watched.";
     var id = chrome.contextMenus.create({
         "title": title,
         "contexts": [context],
@@ -83,7 +79,8 @@ chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
 // ************* Background Script Functions *************
 function recordWatchedVideo(currentVideoUrl, responseFunc) {
-    var connected = localStorage.getItem(CONNECTED_WITH_SERVER) === "true";
+    var connected = localStorage.getItem(CONNECTED_WITH_SERVER) === 'true';
+    var areRemovingVideos = false;
 
     if (connected) {
         var urlQueryString = currentVideoUrl.replace('https://www.youtube.com/watch?', '');
@@ -102,11 +99,13 @@ function recordWatchedVideo(currentVideoUrl, responseFunc) {
         setTimeout(function () {
             _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
         }, msToWait);
+
+        areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
+        
     }
 
-    var areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
     responseFunc({ success: connected, shouldRemoveVideos: areRemovingVideos });
-    
+
 }
 
 function markVideoAsWatched(info, tab) {
@@ -208,16 +207,13 @@ function formatDateTime(date) {
     return strDate + ' ' + strTime;
 }
 
-function changeRelatedVideos(relatedVideoIds) {
+function changeRelatedVideos() {
     var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
     
     if (areCollectionsOn) {
         var selectedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
         _hub.invoke('GetVideosForCollection', userYoutubeId, selectedCollection.title);
-    }
-    else {
-        _hub.invoke('GetUnwatchedVideos', userYoutubeId, relatedVideoIds);
     }
     
 }
@@ -266,30 +262,20 @@ function onRelatedVideosChange(msgObj) {
             chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS, videoData: collectionVideos});
         });
     }
-    else {
-        // This is just filtering out related videos that the user has already seen
-        // TODO: figure out this feature later
-        //var unseenVideos = msgObj.UnwatchedYoutubeVideoIds;
-        //chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
-        //    chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS, unseenVideoIds: unseenVideos });
-        //});
-    }
+    
 
     
 
 }
 
 function getYoutubeTabUrl(tabId) {
-    chrome.tabs.get(tabId, function (tab) {
+    chrome.tabs.get(tabId, function(tab) {
         chrome.tabs.sendMessage(tab.id, { message: FOUND_CURRENT_YOUTUBE_URL, url: tab.url });
-    })
+    });
 }
 
 function onWatchedVideoInserted(msgObj) {
-    var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
-    chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { message: BEGIN_REMOVING_RELATED_VIDEOS });
-    });
+    changeRelatedVideos();
 }
 
 function onYoutubeIdAlreadyExists() {
