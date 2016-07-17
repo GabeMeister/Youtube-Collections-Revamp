@@ -32,8 +32,16 @@ app.controller('MainCtrl', function ($scope, storage) {
 
     $scope.syncUserWithDatabase = function() {
 
+        $scope.extensionState = SYNCING_WITH_DATABASE;
+        $scope.displayMessage = 'Syncing...';
 
-        
+        // We just delete everything and completely re-sync all collections and collection items
+        $scope.collectionsList = [];
+        $scope.selectedCollection = null;
+        $scope.subscriptionList = [];
+
+        _hub.invoke('SyncUserData', $scope.userYoutubeId);
+
     }
 
     $scope.fetchYoutubeSubscriptions = function () {
@@ -151,8 +159,11 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.isHoveringOnNotLoadedChannel = !channel.loaded;
     }
 
-    $scope.rescanSubscriptions = function() {
-        // Make call to server
+    $scope.rescanSubscriptions = function () {
+
+        $scope.displayMessage = 'Fetching new subscriptions...';
+        $scope.extensionState = FETCHING_SUBSCRIPTIONS;
+
         _hub.invoke('UpdateSubscriptions', $scope.userYoutubeId);
 
     }
@@ -196,6 +207,10 @@ app.controller('MainCtrl', function ($scope, storage) {
         _hub.on('onSubscriptionUpdated', onSubscriptionUpdated);
         _hub.on('onChannelsToDownloadFetched', onChannelsToDownloadFetched);
         _hub.on('onChannelVideosInserted', onChannelVideosInserted);
+        _hub.on('onSubscriptionsUpdated', onSubscriptionsUpdated);
+        _hub.on('onCollectionSync', onCollectionSync);
+        _hub.on('onSubscriptionSync', onSubscriptionSync);
+        _hub.on('onEventCompleted', onEventCompleted);
         
         _hubConnection.start()
             .done(function () {
@@ -346,6 +361,49 @@ app.controller('MainCtrl', function ($scope, storage) {
 
         $scope.$apply();
     }
+
+    function onSubscriptionsUpdated() {
+        $scope.extensionState = INITIALIZED;
+    }
+
+    function onCollectionSync(msgObj) {
+
+        if (!util.doesCollectionExist(msgObj.Title, $scope.collectionsList)) {
+
+            $scope.displayMessage = 'Fetching Collections...';
+
+            var newCollection = createLocalStorageCollection(msgObj.Title);
+
+            // Add all collection items
+            for (var i = 0; i < msgObj.ChannelTitles.length; i++) {
+                // Find the channel from the subscriptions list
+                var matchingChannel = util.findChannelByName(msgObj.ChannelTitles[i], $scope.subscriptionList);
+                newCollection.channelItems.push(matchingChannel);
+            }
+
+            // Add new collection to existing collections list
+            $scope.collectionsList.push(newCollection);
+            sortCollectionsList();
+
+            // Set new collection as selected
+            $scope.selectedCollection = util.findCollectionByName(msgObj.Title, $scope.collectionsList);
+
+            $scope.$apply();
+        }
+    }
+    
+    function onSubscriptionSync(msgObj) {
+        $scope.displayMessage = msgObj.Message;
+        addSubscription(msgObj);
+        $scope.$apply();
+    }
+
+    function onEventCompleted() {
+        $scope.extensionState = INITIALIZED;
+        $scope.$apply();
+    }
+
+
 
     /*********************** HELPER FUNCTIONS ***********************/
     function convertToLocalStorageChannel(channel) {

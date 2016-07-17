@@ -272,6 +272,10 @@ option {
     color: #942A57;
 }
 
+#taskbar1 {
+    margin-top: 10px;
+}
+
 #taskbar2 {
     float: right;
 }

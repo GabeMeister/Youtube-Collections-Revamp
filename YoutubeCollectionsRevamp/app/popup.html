@@ -14,6 +14,22 @@
         </div>
     </div>
 
+
+    <div class="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
+        <div>
+            <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
+        </div>
+    </div>
+
+
+    <div class="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
+        <div>
+            <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
+            <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
+        </div>
+    </div>
+
+
     <div class="overlay" ng-if="extensionState==='CHANNEL_ID_DOES_NOT_EXIST'">
         <div>
             <p>Unfortunately, the channel id we found doesn't exist! Please make sure you're logged into YouTube and try again</p>
@@ -29,13 +45,6 @@
     </div>
 
 
-    <div class="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
-        <div>
-            <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
-        </div>
-    </div>
-
-
     <div class="overlay" ng-if="extensionState==='EXISTING_CHANNEL_ID_FOUND'">
         <div>
             <p>Your YouTube channel already exists in the database! We will now sync your data to this machine.</p>
@@ -43,11 +52,9 @@
         </div>
     </div>
 
-
-    <div class="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
+    <div class="overlay" ng-if="extensionState==='SYNCING_WITH_DATABASE'">
         <div>
-            <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
-            <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
+            <p>{{displayMessage}}</p>
         </div>
     </div>
 
@@ -75,6 +82,7 @@
         </div>
     </div>
 
+
     <div class="overlay" ng-if="extensionState==='FAILED_CONNECTION'">
         <div>
             <p>Connecting to Server...</p>
@@ -86,14 +94,14 @@
     <!--TASK BAR SECTION-->
     <div class="taskbar" id="taskbar1">
         <label><input type="checkbox" class="youtubeCollectionsCheckbox" ng-model="areCollectionsOn" /><span class="onOffLabel">Enable Youtube Collections</span></label>
+        <button ng-click="rescanSubscriptions()">Re-scan Subscriptions</button>
+        <button ng-click="syncUserWithDatabase()">Re-sync with Database</button>
     </div>
-    <div class="taskbar" id="taskbar2">
+    <div class="taskbar" id="taskbar3">
         <!--<button ng-click="restartInitialization()">Restart</button>-->
         <!--<button ng-click="restartCollectionItems()">Reset Collections</button>-->
-        <!--<button ng-click="addAthlean()">Add ATHLEAN</button>-->
-        <!--<button ng-click="removeAthlean()">Remove ATHLEAN</button>-->
-        <button ng-click="rescanSubscriptions()">Re-scan Subscriptions</button>
         <button ng-click="renameCollection()" class="inline-button">Rename</button>
+        <button ng-click="deleteCollection()">Delete</button>
         <input class="newCollectionInput" type="text" ng-model="newCollectionTitle" />
         <button ng-click="insertCollection()">Add</button>
     </div>

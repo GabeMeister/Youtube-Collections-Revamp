@@ -110,6 +110,21 @@ var util = {
         return status;
     },
 
+    doesCollectionExist: function (channelTitle, list) {
+        var status = false;
+
+        if (list !== null) {
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].title === channelTitle) {
+                    status = true;
+                    break;
+                }
+            }
+        }
+
+        return status;
+    },
+
     IsSame: function (var1, var2) {
         var result = false;
 
