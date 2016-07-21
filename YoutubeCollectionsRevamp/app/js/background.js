@@ -11,24 +11,15 @@ initialize();
 initializeHub();
 
 
-
 // ************* Chrome API *************
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 	switch (request.message) {
 
-	    case FETCH_YOUTUBE_CHANNEL_ID_MSG:
-	        fetchYoutubeId();
+	    case VERIFY_CHANNEL_ID:
+	        verifyChannelId(request);
 	        break;
-
-	    case NOTIFY_CHANNEL_ID_FOUND_MSG:
-	        handleChannelIdFound(request);
-	        break;
-
-	    case NOTIFY_CHANNEL_ID_NOT_FOUND_MSG:
-	        localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_NOT_FOUND));
-	        break;
-
+            
 	    case RECORD_WATCHED_VIDEO:
 	        // We immediately set the currently being watched video id so we can 
 	        // send a message to the correct tab later
@@ -43,24 +34,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	    case ARE_COLLECTIONS_ON:
 	        var isOn = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
 	        sendResponse({ areCollectionsOn: isOn });
+	        break;
+
+	    case SHOW_CHANNEL_ID_HELP_IMAGE:
+	        chrome.tabs.create({ url: 'https://i.imgur.com/B6ycaRQ.png' });
             break;
 
 	}
-});
-
-chrome.webNavigation.onCompleted.addListener(function (details) {
-    if (details.url === 'https://www.youtube.com/' && util.IsSame(localStorage.getItem(EXTENSION_STATE), FETCHING_YOUTUBE_CHANNEL_ID)) {
-
-        chrome.tabs.query({ url: 'https://www.youtube.com/*', title: 'YouTube' }, function (tabs) {
-            // The user could have had more than one YouTube tab open, so we send this message to all
-            // of them and it'll get to the right one
-            for (i = 0; i < tabs.length; i++) {
-                chrome.tabs.sendMessage(tabs[i].id, { message: GET_CHANNEL_ID_MSG });
-            }
-            
-        });
-
-    }
 });
 
 chrome.runtime.onInstalled.addListener(function () {
@@ -90,18 +70,10 @@ function recordWatchedVideo(currentVideoUrl, responseFunc) {
         var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
         var dateViewed = formatDateTime(new Date());
 
-        var msToWait = 0;
-        if (_hub === null) {
-            initializeHub();
-            msToWait = 1000;
-        }
+        console.log('SignalR Call: InsertWatchedVideo. Parameters: (' + videoId + ', ' + userYoutubeId + ', ' + dateViewed + ')');
+        _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
 
-        setTimeout(function () {
-            _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
-        }, msToWait);
-
-        areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true';
-        
+        areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true' && localStorage.getItem(SELECTED_COLLECTION) !== 'null';
     }
 
     responseFunc({ success: connected, shouldRemoveVideos: areRemovingVideos });
@@ -112,10 +84,6 @@ function markVideoAsWatched(info, tab) {
     var url = info.linkUrl;
     
     if (isYoutubeLink(url)) {
-        if (_hub === null) {
-            initializeHub();
-        }
-        
         // Get just the video id
         // Example url: https://www.youtube.com/watch?v=L0bF7Kj5rxI
         // We want L0bF7Kj5rxI
@@ -123,9 +91,8 @@ function markVideoAsWatched(info, tab) {
         var userYoutubeId = util.unquotify(localStorage.getItem('USER_YOUTUBE_ID'));
         var dateViewed = formatDateTime(new Date());
         
-		setTimeout(function() {
-		    _hub.invoke('MarkVideoAsWatched', videoId, userYoutubeId, dateViewed);
-		}, 1000);
+        console.log('SignalR Call: MarkVideoAsWatched. Parameters: (' + videoId + ', ' + userYoutubeId + ', ' + dateViewed + ')');
+        _hub.invoke('MarkVideoAsWatched', videoId, userYoutubeId, dateViewed);
 
 
         // Remove video in view
@@ -140,19 +107,6 @@ function markVideoAsWatched(info, tab) {
         
     }
 
-}
-
-function fetchYoutubeId()
-{
-    chrome.tabs.query(queryInfo, function (tabs) {
-        var currTabIndex = tabs[0].id;
-
-        setTimeout(function () {
-            chrome.tabs.update(currTabIndex, { selected: true });
-        }, 20);
-    });
-
-    chrome.tabs.create({ url: 'https://www.youtube.com/' });
 }
 
 function isYoutubeLink(url) {
@@ -175,9 +129,11 @@ function initializeHub() {
 
     _hubConnection.start()
     .done(function () {
+        console.log('Connected with SignalR!');
         localStorage.setItem(CONNECTED_WITH_SERVER, 'true');
     })
     .fail(function () {
+        console.log('Failed to connect with SignalR');
         localStorage.setItem(CONNECTED_WITH_SERVER, 'false');
     });
 
@@ -210,15 +166,17 @@ function formatDateTime(date) {
 function changeRelatedVideos() {
     var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
+    var doesCollectionExist = localStorage.getItem(SELECTED_COLLECTION) !== 'null';
     
-    if (areCollectionsOn) {
+    if (areCollectionsOn && doesCollectionExist) {
         var selectedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
+        console.log('SignalR Call: GetVideosForCollection. Parameters: (' + userYoutubeId + ', ' + selectedCollection.title + ')');
         _hub.invoke('GetVideosForCollection', userYoutubeId, selectedCollection.title);
     }
     
 }
 
-function handleChannelIdFound(request) {
+function verifyChannelId(request) {
     $.ajax({
         url: 'https://www.googleapis.com/youtube/v3/subscriptions',
         data: {
@@ -226,9 +184,12 @@ function handleChannelIdFound(request) {
             channelId: request.channelId,
             key: YOUTUBE_BROWSER_KEY
         },
-        success: function(data) {
-            localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
-            _hub.invoke('InsertNewYoutubeChannelId', request.channelId);
+        success: function (data) {
+            if (localStorage.getItem(CONNECTED_WITH_SERVER) === 'true') {
+                localStorage.setItem(USER_YOUTUBE_ID, util.quotify(request.channelId));
+                console.log('SignalR Call: InsertNewYoutubeChannelId. Parameters: (' + request.channelId + ')');
+                _hub.invoke('InsertNewYoutubeChannelId', request.channelId);
+            }
         },
         error: function (data) {
             var jsonResponse = JSON.parse(data.responseText);
@@ -236,9 +197,11 @@ function handleChannelIdFound(request) {
 
             if (errorMessage === 'subscriberNotFound') {
                 localStorage.setItem(EXTENSION_STATE, CHANNEL_ID_DOES_NOT_EXIST);
+                chrome.runtime.sendMessage({ message: NOTIFY_CHANNEL_ID_DOES_NOT_EXIST });
             }
             else if (errorMessage === 'subscriptionForbidden') {
                 localStorage.setItem(EXTENSION_STATE, SUBSCRIPTIONS_NOT_PUBLIC);
+                chrome.runtime.sendMessage({ message: NOTIFY_SUBSCRIPTIONS_NOT_PUBLIC });
             }
             
         }
@@ -246,10 +209,17 @@ function handleChannelIdFound(request) {
 
 }
 
+function getYoutubeTabUrl(tabId) {
+    chrome.tabs.get(tabId, function (tab) {
+        chrome.tabs.sendMessage(tab.id, { message: FOUND_CURRENT_YOUTUBE_URL, url: tab.url });
+    });
+}
+
 
 
 /************************* Signalr Response Functions *************************/
 function onRelatedVideosChange(msgObj) {
+    console.log('SignalR Received Message: onRelatedVideosChange');
 
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
     var currentVideoUrl = util.unquotify(localStorage.getItem(CURRENT_VIDEO_BEING_WATCHED));
@@ -263,25 +233,25 @@ function onRelatedVideosChange(msgObj) {
         });
     }
     
-
-    
-
-}
-
-function getYoutubeTabUrl(tabId) {
-    chrome.tabs.get(tabId, function(tab) {
-        chrome.tabs.sendMessage(tab.id, { message: FOUND_CURRENT_YOUTUBE_URL, url: tab.url });
-    });
 }
 
 function onWatchedVideoInserted(msgObj) {
+    console.log('SignalR Received Message: onWatchedVideoInserted');
     changeRelatedVideos();
 }
 
-function onYoutubeIdAlreadyExists() {
-    localStorage.setItem(EXTENSION_STATE, util.quotify(EXISTING_CHANNEL_ID_FOUND));
+function onNewYoutubeIdInserted() {
+    console.log('SignalR Received Message: onNewYoutubeIdInserted');
+    localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
+
+    var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+    chrome.runtime.sendMessage({ message: NOTIFY_CHANNEL_ID_FOUND, channelId: userYoutubeId });
 }
 
-function onNewYoutubeIdInserted() {
-    localStorage.setItem(EXTENSION_STATE, util.quotify(CHANNEL_ID_FOUND));
+function onYoutubeIdAlreadyExists() {
+    console.log('SignalR Received Message: onYoutubeIdAlreadyExists');
+    localStorage.setItem(EXTENSION_STATE, util.quotify(EXISTING_CHANNEL_ID_FOUND));
+
+    var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+    chrome.runtime.sendMessage({ message: NOTIFY_EXISTING_CHANNEL_ID_FOUND, channelId: userYoutubeId });
 }

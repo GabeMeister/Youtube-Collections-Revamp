@@ -18,18 +18,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         // Change collection items to the new currently selected collection
         $scope.collectionItemsList = getCollectionItems();
     });
-
-    $scope.fetchYoutubeChannelId = function () {
-
-        // We check for the youtube channel id in the local storage. 
-        // If it isn't there, we fetch the youtube channel id from the 
-        // user's homepage.
-        $scope.extensionState = FETCHING_YOUTUBE_CHANNEL_ID;
-
-        chrome.runtime.sendMessage({ message: FETCH_YOUTUBE_CHANNEL_ID_MSG });
-
-    }
-
+    
     $scope.syncUserWithDatabase = function() {
 
         $scope.extensionState = SYNCING_WITH_DATABASE;
@@ -40,6 +29,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.selectedCollection = null;
         $scope.subscriptionList = [];
 
+        console.log('SignalR Call: SyncUserData. Parameters: (' + $scope.userYoutubeId + ')');
         _hub.invoke('SyncUserData', $scope.userYoutubeId);
 
     }
@@ -50,23 +40,11 @@ app.controller('MainCtrl', function ($scope, storage) {
         
         // Completed inserting channel id, now fetch all subscriptions
         $scope.displayMessage = 'Fetching channel subscriptions...';
+        console.log('SignalR Call: FetchAndInsertChannelSubscriptions. Parameters: (' + $scope.userYoutubeId + ')');
         _hub.invoke('FetchAndInsertChannelSubscriptions', $scope.userYoutubeId);
 
     }
-
-    $scope.restartInitialization = function () {
-        _hub.invoke('RestartInitialization');
-        clearScope();
-    }
-
-    $scope.restartCollectionItems = function () {
-        _hub.invoke('RestartCollectionItems');
-
-        for (var i = 0; i < $scope.collectionsList.length; i++) {
-            $scope.collectionsList[i].channelItems = [];
-        }
-    }
-
+    
     $scope.insertCollection = function () {
 
         // Check that there's actually text in the input and the collection name
@@ -79,6 +57,7 @@ app.controller('MainCtrl', function ($scope, storage) {
             sortCollectionsList();
 
             // Query the database
+            console.log('SignalR Call: InsertCollection. Parameters: (' + newCollItem.title + ', ' + $scope.userYoutubeId + ')');
             _hub.invoke('InsertCollection', newCollItem.title, $scope.userYoutubeId);
 
             // Set new collection as selected
@@ -98,6 +77,7 @@ app.controller('MainCtrl', function ($scope, storage) {
         if ($scope.selectedCollection !== null && !util.doesChannelExist(channel.title, $scope.selectedCollection.channelItems)) {
             $scope.selectedCollection.channelItems.push(channel);
             // Query database with new channel in collection
+            console.log('SignalR Call: InsertCollectionItem. Parameters: (' + channel.id + ', ' + $scope.selectedCollection.title + ', ' + $scope.userYoutubeId + ')');
             _hub.invoke('InsertCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
         }
         
@@ -106,6 +86,7 @@ app.controller('MainCtrl', function ($scope, storage) {
     $scope.deleteChannelFromCollection = function (channel) {
         $scope.selectedCollection.channelItems = util.filterCollection(channel.title, $scope.selectedCollection.channelItems);
         // Query database with new channel in collection
+        console.log('SignalR Call: DeleteCollectionItem. Parameters: (' + channel.id + ', ' + $scope.selectedCollection.title + ', ' + $scope.userYoutubeId + ')');
         _hub.invoke('DeleteCollectionItem', channel.id, $scope.selectedCollection.title, $scope.userYoutubeId);
     }
 
@@ -148,6 +129,8 @@ app.controller('MainCtrl', function ($scope, storage) {
         if ($scope.oldCollectionName !== newCollectionName) {
             $scope.selectedCollection.title = newCollectionName;
             var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
+
+            console.log('SignalR Call: RenameCollection. Parameters: (' + $scope.oldCollectionName + ', ' + newCollectionName + ', ' + userYoutubeId + ')');
             _hub.invoke('RenameCollection', $scope.oldCollectionName, newCollectionName, userYoutubeId);
         }
 
@@ -165,6 +148,7 @@ app.controller('MainCtrl', function ($scope, storage) {
     $scope.confirmCollectionDelete = function() {
         
         // The user wants to delete the selected collection
+        console.log('SignalR Call: DeleteCollection. Parameters: (' + $scope.selectedCollection.title + ', ' + $scope.userYoutubeId + ')');
         _hub.invoke('DeleteCollection', $scope.selectedCollection.title, $scope.userYoutubeId);
 
         var index = $scope.collectionsList.indexOf($scope.selectedCollection);
@@ -190,37 +174,23 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.displayMessage = 'Updating subscriptions...';
         $scope.extensionState = FETCHING_SUBSCRIPTIONS;
 
+        console.log('SignalR Call: UpdateSubscriptions. Parameters: (' + $scope.userYoutubeId + ')');
         _hub.invoke('UpdateSubscriptions', $scope.userYoutubeId);
 
     }
-    
-    $scope.addAthlean = function () {
-        // Add ATHLEAN to subscription list
-        $scope.subscriptionList.push({
-            id: 'UCe0TLA0EsQbE-MjuHXevj2A',
-            title: 'ATHLEAN-X',
-            thumbnail: 'https://yt3.ggpht.com/-tN0EMmN9rXc/AAAAAAAAAAI/AAAAAAAAAAA/KQgPgMaouVA/s240-c-k-no-rj-c0xffffff/photo.jpg',
-            loaded: true
-        });
 
-        sortSubscriptionsList();
-
-        _hub.invoke('AddAthlean');
+    $scope.showChannelIdHelpImage = function() {
+        chrome.runtime.sendMessage({ message: SHOW_CHANNEL_ID_HELP_IMAGE });
     }
 
-    $scope.removeAthlean = function () {
-        var athleanId = 'UCe0TLA0EsQbE-MjuHXevj2A';
+    $scope.verifyChannelIdInput = function (channelIdInput) {
 
-        // Remove ATHLEAN from subscription list
-        $scope.subscriptionList = util.filterChannelIdFromList(athleanId, $scope.subscriptionList);
-
-        // Remove ATHLEAN from any possible collections
-        for (var i = 0; i < $scope.collectionsList.length; i++) {
-            util.filterChannelIdFromCollection(athleanId, $scope.collectionsList[i]);
+        if (channelIdInput !== undefined && channelIdInput !== '' && channelIdInput !== null) {
+            chrome.runtime.sendMessage({ message: VERIFY_CHANNEL_ID, channelId: channelIdInput });
         }
-
-        _hub.invoke('DeleteAthlean');
+        
     }
+    
 
     /*********************** CLASS FUNCTIONS ***********************/
 
@@ -251,6 +221,7 @@ app.controller('MainCtrl', function ($scope, storage) {
 
                 // Get any channels that don't have videos loaded
                 // Send list to hub to respond with any channels that have recently had videos loaded
+                console.log('SignalR Call: GetChannelsWithVideosInserted. Parameters: (' + getNotLoadedChannels() + ')');
                 _hub.invoke('GetChannelsWithVideosInserted', getNotLoadedChannels());
             
             })
@@ -284,23 +255,11 @@ app.controller('MainCtrl', function ($scope, storage) {
         $scope.isHoveringOnNotLoadedChannel = false;
 
     }
-
-    function clearScope() {
-        // This is for when we are doing a full restart
-        $scope.subscriptionList = [];
-        $scope.collectionsList = [];
-        $scope.selectedCollection = null;
-        $scope.newCollectionTitle = '';
-        $scope.displayMessage = '';
-        $scope.userYoutubeId = '';
-        $scope.extensionState = '';
-        $scope.collectionItemsList = [];
-    }
-
-
+    
 
     /*********************** SIGNALR ***********************/
     function onSubscriptionsInserted() {
+        console.log('SignalR Received Message: onSubscriptionsInserted');
 
         // Completed inserting subscription id
         $scope.displayMessage = 'Done fetching channel subscriptions!';
@@ -316,6 +275,7 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     function onSubscriptionUpdated(subscriptionObj) {
+        console.log('SignalR Received Message: onSubscriptionUpdated');
 
         if (subscriptionObj.Message === 'SubscriptionDelete') {
             // Remove subscription from any collections
@@ -336,6 +296,8 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     function onChannelsToDownloadFetched(message) {
+        console.log('SignalR Received Message: onChannelsToDownloadFetched');
+
         // We received a message from the server containing channels that still 
         // haven't been downloaded yet
         var channelsNotDownloadedYet = message.YoutubeIds;
@@ -357,6 +319,7 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     function onProgressChanged(msgObj) {
+        console.log('SignalR Received Message: onProgressChanged');
 
         switch ($scope.extensionState) {
 
@@ -376,6 +339,8 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     function onChannelVideosInserted(msgObj) {
+        console.log('SignalR Received Message: onChannelVideosInserted');
+
         var loadedChannelId = msgObj.ChannelId;
         
         for (var i = 0; i < $scope.subscriptionList.length; i++) {
@@ -389,11 +354,14 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
 
     function onSubscriptionsUpdated() {
+        console.log('SignalR Received Message: onSubscriptionsUpdated');
+
         $scope.extensionState = INITIALIZED;
         $scope.$apply();
     }
 
     function onCollectionSync(msgObj) {
+        console.log('SignalR Received Message: onCollectionSync');
 
         if (!util.doesCollectionExist(msgObj.Title, $scope.collectionsList)) {
 
@@ -420,12 +388,16 @@ app.controller('MainCtrl', function ($scope, storage) {
     }
     
     function onSubscriptionSync(msgObj) {
+        console.log('SignalR Received Message: onSubscriptionSync');
+
         $scope.displayMessage = msgObj.Message;
         addSubscription(msgObj);
         $scope.$apply();
     }
 
     function onEventCompleted() {
+        console.log('SignalR Received Message: onEventCompleted');
+
         $scope.extensionState = INITIALIZED;
         $scope.$apply();
     }
@@ -514,8 +486,25 @@ app.controller('MainCtrl', function ($scope, storage) {
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         switch (request.message) {
 
+            case NOTIFY_CHANNEL_ID_FOUND:
+                $scope.extensionState = CHANNEL_ID_FOUND;
+                $scope.userYoutubeId = request.channelId;
+                $scope.$apply();
+                break;
+            case NOTIFY_EXISTING_CHANNEL_ID_FOUND:
+                $scope.extensionState = EXISTING_CHANNEL_ID_FOUND;
+                $scope.userYoutubeId = request.channelId;
+                $scope.$apply();
+                break;
+            case NOTIFY_CHANNEL_ID_DOES_NOT_EXIST:
+                $scope.extensionState = CHANNEL_ID_DOES_NOT_EXIST;
+                $scope.$apply();
+                break;
+            case NOTIFY_SUBSCRIPTIONS_NOT_PUBLIC:
+                $scope.extensionState = SUBSCRIPTIONS_NOT_PUBLIC;
+                $scope.$apply();
+                break;
             
-
         }
     });
 

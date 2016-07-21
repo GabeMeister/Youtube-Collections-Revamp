@@ -1,6 +1,5 @@
 ﻿$(document).ready(function () {
     var _video = null;
-    var _relatedVideosList;
 
     initialize();
 
@@ -33,7 +32,7 @@
         $('.guide-item.yt-uix-sessionlink.yt-valign.spf-link').each(function (index) {
             if ($(this).text().indexOf('My Channel') > -1) {
                 var channelIdStr = $(this).attr('href').replace('/channel/', '');
-                chrome.runtime.sendMessage({ message: NOTIFY_CHANNEL_ID_FOUND_MSG, channelId: channelIdStr });
+                chrome.runtime.sendMessage({ message: VERIFY_CHANNEL_ID, channelId: channelIdStr });
                 foundId = true;
                 return false;
 
@@ -71,7 +70,6 @@
     }
 
     function initialize() {
-        _relatedVideosList = [];
         waitUntilUserBrowsesToVideo();
     }
 
@@ -79,10 +77,7 @@
     /************************* DOM Interactions *************************/
     function removeRelatedVideos() {
         var relatedVidsList = getAllRelatedVideos();
-        // To "remember" the original related videos, we keep track of them in this list
-        _relatedVideosList = [];
         for (var i = 0; i < relatedVidsList.length; i++) {
-            _relatedVideosList.push(relatedVidsList.eq(i));
             relatedVidsList.eq(i).remove();
         }
     }
@@ -93,36 +88,7 @@
         // the script must wait for a couple of seconds before it sets the video event handlers
         setTimeout(function () {
             chrome.runtime.sendMessage({ message: GET_CURRENT_YOUTUBE_URL });
-        }, 2000);
-    }
-
-    function getRelatedVideoIdsFromDom() {
-        var relatedVideoIds = [];
-        var relatedVids = $('.related-list-item');
-
-        for (var i = 0; i < relatedVids.length; i++) {
-            var relatedVideoItemUrl = relatedVids.eq(i).find('a').attr('href').replace('/watch?', '');
-            var params = $.getQueryParameters(relatedVideoItemUrl);
-            var videoId = params["v"];
-
-            relatedVideoIds.push(videoId);
-        }
-
-        return relatedVideoIds;
-    }
-
-    function getRelatedVideoIdsFromCache() {
-        var relatedVideoIds = [];
-
-        for (var i = 0; i < _relatedVideosList.length; i++) {
-            var relatedVideoItemUrl = _relatedVideosList[i].find('a').attr('href').replace('/watch?', '');
-            var params = $.getQueryParameters(relatedVideoItemUrl);
-            var videoId = params["v"];
-
-            relatedVideoIds.push(videoId);
-        }
-
-        return relatedVideoIds;
+        }, 1000);
     }
 
     function getCurrentVideoChannelId() {
@@ -192,14 +158,7 @@
         }
         
     }
-
-    function getYoutubeIdFromRelatedVideo(relatedVideo) {
-        var relatedVideoItemUrl = relatedVideo.find('a').attr('href').replace('/watch?', '');
-        var params = $.getQueryParameters(relatedVideoItemUrl);
-        var videoId = params["v"];
-        return videoId;
-    }
-
+    
     function getAutoplayVideoList() {
         return $('.autoplay-bar').find('ul.video-list').first();
     }
@@ -215,10 +174,6 @@
 
     function getFirstRegularRelatedVideo() {
         return getRegularRelatedVideosList().find('.video-list-item').first();
-    }
-
-    function getRegularRelatedVideos() {
-        return getRegularRelatedVideosList().find('.video-list-item');
     }
 
     function getAllRelatedVideos() {

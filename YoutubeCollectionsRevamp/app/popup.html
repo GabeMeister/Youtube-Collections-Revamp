@@ -9,22 +9,16 @@
     <!--OVERLAY MESSAGES SECTION-->
     <div class="overlay" ng-if="extensionState===null||extensionState==='undefined'||extensionState===''">
         <div>
-            <p>Welcome to Youtube Collections Revamp! This extension will look for your youtube id. Re-open the popup window after the YouTube page is finished loading.</p>
-            <button ng-click="fetchYoutubeChannelId()">Got it!</button>
-        </div>
-    </div>
-
-
-    <div class="overlay" ng-if="extensionState==='FETCHING_YOUTUBE_CHANNEL_ID'">
-        <div>
-            <p>Almost done fetching your channel id! Close and re-open this popup window.</p>
+            <p>Welcome to Youtube Collections Revamp! To get started, enter your YouTube <a ng-click="showChannelIdHelpImage()" class="helpMenuUrl">Channel ID</a>:</p>
+            <input ng-model="channelIdInput" />
+            <button ng-click="verifyChannelIdInput(channelIdInput)">Ok</button>
         </div>
     </div>
 
 
     <div class="overlay" ng-if="extensionState==='CHANNEL_ID_FOUND'">
         <div>
-            <p>Your channel id was successfully found. This extension will now start fetching all your subscription videos.</p>
+            <p>Awesome! This extension will now start fetching all your subscriptions.</p>
             <button ng-click="fetchYoutubeSubscriptions()">Do it!</button>
         </div>
     </div>
@@ -32,15 +26,18 @@
 
     <div class="overlay" ng-if="extensionState==='CHANNEL_ID_DOES_NOT_EXIST'">
         <div>
-            <p>Unfortunately, the channel id we found doesn't exist! Please make sure you're logged into YouTube and try again</p>
-            <button ng-click="fetchYoutubeChannelId()">Try Again</button>
+            <p>Unfortunately, the channel id you entered doesn't exist! Please try again.</p>
+            <input ng-model="channelIdInput" />
+            <button ng-click="verifyChannelIdInput(channelIdInput)">Ok</button>
         </div>
     </div>
 
+
     <div class="overlay" ng-if="extensionState==='SUBSCRIPTIONS_NOT_PUBLIC'">
         <div>
-            <p>We found your channel id, but your subscriptions aren't public! Please go into your YouTube settings and uncheck 'Keep all my subscriptions private'.</p>
-            <button ng-click="fetchYoutubeChannelId()">Try Again</button>
+            <p>Your subscriptions on your channel aren't public! Please go into your YouTube settings and uncheck "Keep all my subscriptions private" and try again.</p>
+            <input ng-model="channelIdInput" />
+            <button ng-click="verifyChannelIdInput(channelIdInput)">Ok</button>
         </div>
     </div>
 
@@ -52,17 +49,10 @@
         </div>
     </div>
 
+
     <div class="overlay" ng-if="extensionState==='SYNCING_WITH_DATABASE'">
         <div>
             <p>{{displayMessage}}</p>
-        </div>
-    </div>
-
-
-    <div class="overlay" ng-if="extensionState==='CHANNEL_ID_NOT_FOUND'">
-        <div>
-            <p>Your channel id wasn't found. Log into YouTube and try again. </p>
-            <button ng-click="fetchYoutubeChannelId()">Try again!</button>
         </div>
     </div>
 
@@ -74,13 +64,14 @@
     </div>
 
 
-<div class="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
-    <div>
-        <p>Enter new collection name:</p>
-        <input ng-model="newCollectionName"/>
-        <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+    <div class="overlay" ng-if="extensionState==='RENAMING_COLLECTION'">
+        <div>
+            <p>Enter new collection name:</p>
+            <input ng-model="newCollectionName"/>
+            <button ng-click="confirmCollectionRename(newCollectionName)">Ok</button>
+        </div>
     </div>
-</div>
+
 
     <div class="overlay" ng-if="extensionState==='DELETING_COLLECTION'">
         <div>
@@ -169,8 +160,6 @@
     <script src="js/angular-cookies.js"></script>
     <script src="js/angularLocalStorage.js"></script>
     <script src="js/popup.js"></script>
-    <script src="js/popup-signalr.js"></script>
-    <script src="js/popup-messenger.js"></script>
 </body>
 </html>
 

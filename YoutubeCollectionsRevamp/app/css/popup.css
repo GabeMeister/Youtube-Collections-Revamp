@@ -366,6 +366,7 @@ option {
     width: 200px;
     right: 10px;
     bottom: 10px;
+    background-color: #dc2513;
     background-color: rgba(220, 37, 19, 0.76);
     padding: 10px;
     border-radius: 4px;
@@ -373,4 +374,16 @@ option {
 
 .searchbar {
     width: 315px;
+}
+
+.helpMenuUrl {
+    color: #2d2fcf;
+    color: rgba(45, 47, 207, 0.76);
+}
+
+.helpMenuUrl:hover {
+    color: #2d2fcf;
+    color: rgba(45, 47, 207, 0.76);
+    text-decoration: underline;
+    cursor: pointer;
 }
