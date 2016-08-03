@@ -70,14 +70,25 @@ function recordWatchedVideo(currentVideoUrl, responseFunc) {
         var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
         var dateViewed = formatDateTime(new Date());
 
-        console.log('SignalR Call: InsertWatchedVideo. Parameters: (' + videoId + ', ' + userYoutubeId + ', ' + dateViewed + ')');
-        _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed);
+        invokeRecordWatchedVideo(videoId, userYoutubeId, dateViewed);
 
         areRemovingVideos = localStorage.getItem(ARE_COLLECTIONS_ON) === 'true' && localStorage.getItem(SELECTED_COLLECTION) !== 'null';
     }
 
     responseFunc({ success: connected, shouldRemoveVideos: areRemovingVideos });
 
+}
+
+function invokeRecordWatchedVideo(videoId, userYoutubeId, dateViewed) {
+    console.log('SignalR Call: InsertWatchedVideo. Parameters: (' + videoId + ', ' + userYoutubeId + ', ' + dateViewed + ')');
+    _hub.invoke('InsertWatchedVideo', videoId, userYoutubeId, dateViewed)
+    .done(function () {
+            console.log(videoId + ' INSERTED');
+        })
+    .fail(function () {
+        console.log(videoId + ' FAILED! Trying again...');
+            invokeRecordWatchedVideo(videoId, userYoutubeId, dateViewed);
+        });
 }
 
 function markVideoAsWatched(info, tab) {
