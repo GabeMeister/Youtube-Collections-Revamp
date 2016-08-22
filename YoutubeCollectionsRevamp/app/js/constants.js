@@ -91,20 +91,3 @@ var RELATED_VIDEO_HTML_TEMPLATE = "<li class=\"video-list-item related-list-item
 "spf-nolink hide-until-delayloaded addto-tv-queue-button yt-uix-tooltip\" type=\"button\" " +
 "onclick=\";return false;\" title=\"TV Queue\" data-video-ids=\"{{VideoID}}\" " +
 "data-style=\"tv-queue\"></button> </div></li>";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
