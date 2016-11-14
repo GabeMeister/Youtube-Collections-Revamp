@@ -14,13 +14,17 @@
             case REMOVE_VIDEO:
                 removeVideo(request.videoId);
                 break;
-                
+
             case UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS:
                 updateRelatedVideosWithCollectionVideos(request.videoData);
                 break;
 
             case FOUND_CURRENT_YOUTUBE_URL:
                 setVideoEventsIfOnVideo(request.url);
+                break;
+
+            case TOGGLE_PLAY:
+                togglePlay();
                 break;
 
         }
@@ -146,7 +150,7 @@
             var autoPlayVideoHtml = getRelatedVidHTML(videoData[0]);
             autoplayList.append(autoPlayVideoHtml);
         }
-        
+
         if (videoData.length > 1) {
             // Add remaining videos to the regular related videos list after the last video
             var lastElement = getLastItemRelatedVideosList();
@@ -156,9 +160,9 @@
                 lastElement.before(collectionVideoHtml);
             }
         }
-        
+
     }
-    
+
     function getAutoplayVideoList() {
         return $('.autoplay-bar').find('ul.video-list').first();
     }
@@ -167,7 +171,7 @@
         // Returns just the auto play video
         return getAutoplayVideoList().find('.video-list-item').first();
     }
-    
+
     function getRegularRelatedVideosList() {
         return $('#watch-related');
     }
@@ -182,7 +186,7 @@
 
     function getLastItemRelatedVideosList() {
         // We assume this function is called when there are no videos in the related videos list
-        // Because of no videos in the list, we actually just grab the first child, 
+        // Because of no videos in the list, we actually just grab the first child,
         // and start adding stuff before it to "add" videos
         return getRegularRelatedVideosList().children().first();
     }
@@ -198,9 +202,9 @@
         else {
             waitUntilUserBrowsesToVideo();
         }
-        
+
     }
-    
+
     function ensureAutoplayVideoIsPresent()
     {
         var autoPlayVideo = getAutoplayVideo();
@@ -221,13 +225,13 @@
             }
         });
     }
-    
+
     function videoProgressEventHandler(e) {
         // When a video starts we remove related videos that the user has already seen
         // We use the progress event because the start event doesn't always get fired
         var lastPlayedVideoUrl = localStorage.getItem(LAST_PLAYED_VIDEO);
         var currVideoUrl = $('.ytp-title-link.yt-uix-sessionlink').eq(0).attr('href');
-        
+
         if (util.quotify(currVideoUrl) !== lastPlayedVideoUrl) {
             // This is a new video the user has browsed to, we need to change the related videos
             // First record the current video url to local storage as "last played"
@@ -240,9 +244,17 @@
                 }
             });
 
-            
+
+        }
+    }
+
+    function togglePlay() {
+        if (_video !== null && _video.paused) {
+          _video.play();
+        }
+        else if (_video !== null && !_video.paused) {
+          _video.pause();
         }
     }
 
 });
-

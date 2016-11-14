@@ -19,14 +19,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	    case VERIFY_CHANNEL_ID:
 	        verifyChannelId(request);
 	        break;
-            
+
 	    case RECORD_WATCHED_VIDEO:
-	        // We immediately set the currently being watched video id so we can 
+	        // We immediately set the currently being watched video id so we can
 	        // send a message to the correct tab later
 	        localStorage.setItem(CURRENT_VIDEO_BEING_WATCHED, util.quotify(request.currentVideoId));
 	        recordWatchedVideo(request.currentVideoId, sendResponse);
 	        break;
-            
+
 	    case GET_CURRENT_YOUTUBE_URL:
 	        getYoutubeTabUrl(sender.tab.id);
 	        break;
@@ -55,7 +55,9 @@ chrome.runtime.onInstalled.addListener(function () {
 
 chrome.contextMenus.onClicked.addListener(markVideoAsWatched);
 
-
+chrome.commands.onCommand.addListener(function(command) {
+  console.log('Command:', command);
+});
 
 // ************* Background Script Functions *************
 function recordWatchedVideo(currentVideoUrl, responseFunc) {
@@ -93,7 +95,7 @@ function invokeRecordWatchedVideo(videoId, userYoutubeId, dateViewed) {
 
 function markVideoAsWatched(info, tab) {
     var url = info.linkUrl;
-    
+
     if (isYoutubeLink(url)) {
         // Get just the video id
         // Example url: https://www.youtube.com/watch?v=L0bF7Kj5rxI
@@ -101,21 +103,21 @@ function markVideoAsWatched(info, tab) {
         var videoId = url.replace(/https:\/\/www.youtube.com\/watch\?v=/g, '');
         var userYoutubeId = util.unquotify(localStorage.getItem('USER_YOUTUBE_ID'));
         var dateViewed = formatDateTime(new Date());
-        
+
         console.log('SignalR Call: MarkVideoAsWatched. Parameters: (' + videoId + ', ' + userYoutubeId + ', ' + dateViewed + ')');
         _hub.invoke('MarkVideoAsWatched', videoId, userYoutubeId, dateViewed);
 
 
         // Remove video in view
         // Because the user right clicked in the active window to mark the video
-        // as watched, we can rely on the fact that the window is active and the 
+        // as watched, we can rely on the fact that the window is active and the
         // url has youtube in it
 		chrome.tabs.query({ active: true, url: 'https://www.youtube.com/*' }, function (tabs) {
-		    
+
 		    chrome.tabs.sendMessage(tabs[0].id, { 'message': REMOVE_VIDEO, 'videoId': videoId });
-		    
+
 		});
-        
+
     }
 
 }
@@ -125,7 +127,7 @@ function isYoutubeLink(url) {
 }
 
 function initialize() {
-    
+
 }
 
 function initializeHub() {
@@ -178,13 +180,13 @@ function changeRelatedVideos() {
     var userYoutubeId = util.unquotify(localStorage.getItem(USER_YOUTUBE_ID));
     var areCollectionsOn = util.unquotify(localStorage.getItem(ARE_COLLECTIONS_ON)) === 'true';
     var doesCollectionExist = localStorage.getItem(SELECTED_COLLECTION) !== 'null';
-    
+
     if (areCollectionsOn && doesCollectionExist) {
         var selectedCollection = JSON.parse(localStorage.getItem(SELECTED_COLLECTION));
         console.log('SignalR Call: GetVideosForCollection. Parameters: (' + userYoutubeId + ', ' + selectedCollection.title + ')');
         _hub.invoke('GetVideosForCollection', userYoutubeId, selectedCollection.title);
     }
-    
+
 }
 
 function verifyChannelId(request) {
@@ -214,7 +216,7 @@ function verifyChannelId(request) {
                 localStorage.setItem(EXTENSION_STATE, SUBSCRIPTIONS_NOT_PUBLIC);
                 chrome.runtime.sendMessage({ message: NOTIFY_SUBSCRIPTIONS_NOT_PUBLIC });
             }
-            
+
         }
     });
 
@@ -227,7 +229,6 @@ function getYoutubeTabUrl(tabId) {
 }
 
 
-
 /************************* Signalr Response Functions *************************/
 function onRelatedVideosChange(msgObj) {
     console.log('SignalR Received Message: onRelatedVideosChange');
@@ -238,12 +239,12 @@ function onRelatedVideosChange(msgObj) {
     if (areCollectionsOn) {
         // We change the related videos to the collection videos
         var collectionVideos = msgObj.CollectionVideos;
-        
+
         chrome.tabs.query({ url: currentVideoUrl }, function (tabs) {
             chrome.tabs.sendMessage(tabs[0].id, { message: UPDATE_RELATED_VIDEOS_WITH_COLLECTION_VIDEOS, videoData: collectionVideos});
         });
     }
-    
+
 }
 
 function onWatchedVideoInserted(msgObj) {
