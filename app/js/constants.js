@@ -1,6 +1,6 @@
 ﻿// General Constants
-var HUB_SERVER_URL = 'http://localhost:3851';
-// var HUB_SERVER_URL = 'https://youtubecollectionsrevampserver.azurewebsites.net/signalr';
+// var HUB_SERVER_URL = 'http://localhost:3851';
+var HUB_SERVER_URL = 'https://youtubecollectionsrevampserver.azurewebsites.net/signalr';
 
 
 // Chrome Runtime Messages
