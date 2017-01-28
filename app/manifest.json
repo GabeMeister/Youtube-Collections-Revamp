@@ -2,7 +2,7 @@
   "name": "Youtube Collections Revamp",
   "short_name": "Coll. Revamp",
   "description": "A revamp of the YouTube Collections feature, in a Chrome Extension.",
-  "version": "2.7",
+  "version": "2.8",
   "permissions": [
     "activeTab",
     "storage",
